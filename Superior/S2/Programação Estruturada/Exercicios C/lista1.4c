@@ -1,0 +1,19 @@
+/* Sabendo que os argumentos da func~ao "printf"podem ser express~oes (a+b, a/b, a*b...), e n~ao somente
+argumentos, faca um programa capaz de ler um valor inteiro X e escrever seu triplo, seu quadrado, e
+seu meio */
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+	float numero;
+	printf("Digite um numero: ");
+	scanf("%f", &numero);
+
+	printf("\nTriplo:    %f", numero*3);
+	printf("\nQuadrado:  %f", numero*numero);
+	printf("\nMeio:      %f\n", numero/2);
+
+	return 0;
+}

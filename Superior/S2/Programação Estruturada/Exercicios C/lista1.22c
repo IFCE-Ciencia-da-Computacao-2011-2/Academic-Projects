@@ -1,0 +1,28 @@
+/*Escreva um programa em C que imprima os inteiros equivalentes a algumas letras maiusculas, letras
+minusculas e smbolos especiais. No mnimo, determine os numeros inteiros equivalentes ao conjunto
+seguinte: A BCabc 0 12 $ * + / e o caractere espaco em branco.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+	int i;
+
+	for (i = 'A'; i <= 'Z'; ++i)	{
+		printf("%c: %d\n", i, i);
+	}
+	for (i = 'a'; i <= 'z'; ++i)	{
+		printf("%c: %d\n", i, i);
+	}
+	for (i = '0'; i <= '9'; ++i)	{
+		printf("%c: %d\n", i, i);
+	}
+	printf("%c: %d\n", ' ', ' ');
+	printf("%c: %d\n", '+', '-');
+	printf("%c: %d\n", '-', '+');
+	printf("%c: %d\n", '*', '*');
+	printf("%c: %d\n", '/', '/');
+
+	return 0;
+}

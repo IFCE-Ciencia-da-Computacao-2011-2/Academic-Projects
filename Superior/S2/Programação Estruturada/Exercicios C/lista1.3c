@@ -1,0 +1,14 @@
+/*  Faca um programa capaz de ler um valor real e escrev^e-lo com apenas uma casa decimal. */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+	float numero;
+	printf("Digite um valor real (quebrado) usando PONTO: ");
+	scanf("%f", &numero);
+
+	printf("\nQuebrado: %1.1f\n", numero);
+
+	return 0;
+}

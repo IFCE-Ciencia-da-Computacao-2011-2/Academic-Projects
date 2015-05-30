@@ -1,0 +1,21 @@
+/*  Escreva um programa que pegue o valor de uma conta de restaurante e imprima o valor total a ser
+pago, considerando que o restaurante cobra 10% de taxa para o garcom.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+	float numero;
+	printf("Digite o valor da conta: ");
+	scanf("%f", &numero);
+
+	printf("\nRecibo:");
+	printf("\n-----------------------");
+	printf("\nConta:          % 5.2f", numero);
+	printf("\n10%% do garçom:  % 5.2f", numero*0.1);
+	printf("\n-----------------------");
+	printf("\nTOTAL:          % 5.2f\n", numero+numero*0.1);
+
+	return 0;
+}

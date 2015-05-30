@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdio.h>
+#include <math.h>
+#define TAMANHO 9 // Num max: 9
+/*
+ Um palndromo e um numero, ou frase textual, que pode ser lido da mesma forma da esquerda para
+a direita e vice-versa. Por exemplo, cada um dos seguintes inteiros de cinco dgitos e um palndromo:
+12321, 55555, 45554 e 11611. Escreva um programa que leia um inteiro de cinco dgitos e determine se
+ele e ou n~ao um palndromo. [Dica: use os operadores de divis~ao e modulo para separar o numero em
+seus dgitos individuais.]
+*/
+
+int main() {
+	unsigned int numero;
+	printf("Digite um número de %d dígitos: ", TAMANHO);
+
+	scanf("%d", &numero);
+
+	if (numero < pow(10, TAMANHO-1) || numero > pow(10, TAMANHO)-1) {
+		printf("Número inválido! \n");
+		return 1;
+	}
+
+	int isPalindromo = 1;
+	int pos;
+	int numComparado1;
+	int numComparado2;
+	for (pos=0; pos<TAMANHO/2; pos++) {
+		numComparado1 = (numero % (int) pow(10, pos+1)) / pow(10, pos);
+		numComparado2 = (numero / (int) pow(10, TAMANHO-(pos+1))) % 10;
+
+		//printf("%d == %d?\n", numComparado1, numComparado2);
+
+		if (numComparado1 != numComparado2) {
+			isPalindromo = 0;
+			break;
+		}
+	}
+
+	if (isPalindromo) {
+		printf("Número dado é palíndromo\n");
+	} else {
+		printf("Número dado não é palíndromo\n");
+	}
+
+	return 0;
+}

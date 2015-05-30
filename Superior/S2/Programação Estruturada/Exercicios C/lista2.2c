@@ -1,0 +1,36 @@
+/*
+ Implemente um programa que tenha como entrada um numero (1-7) que corresponde a um dos dias
+da semana e imprima na tela o nome do dia correspondente (domingo, segunda, terca, quarta, quinta,
+sexta, sabado). Se o numero lido n~ao estiver no intervalo 1-7, imprima: "Numero de dia n~ao valido". O
+programa deve permanecer executando ate que o usuario tecle o numero 0. (Utilize obrigatoriamente
+teste no incio).
+*/
+
+#include <stdio.h>
+#include <stdio.h>
+
+int main() {
+	char diasDaSemana[][8] = {
+		"domingo",
+		"segunda",
+		"terça",
+		"quarta",
+		"quinta",
+		"sexta",
+		"sábado"
+	};
+
+	int dia = 0;
+	int diaValido;
+	do {
+		printf("Digite um número (1-7) correspondente a um dia da semana: ");
+		scanf("%d", &dia);
+
+		diaValido = (dia > 0 && dia < 8);
+		if (!diaValido) {
+			printf("Número de dia não válido!\n\n");
+		}
+	} while (!diaValido);
+
+	printf("Dia da semana: %s\n", diasDaSemana[dia-1]);
+}

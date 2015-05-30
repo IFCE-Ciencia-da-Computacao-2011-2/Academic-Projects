@@ -1,0 +1,25 @@
+/*  Escreva um programa que receba a entrada de um numero de tr^es dgitos, separe o numero em seus
+dgitos componentes e reconstrua um numero com os componentes na ordem inversa. Exemplo: para
+entrada de 123, a resposta do programa seria 321 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#define SIZE 3
+
+int main() {
+	char string[SIZE+1];
+
+	printf("Palavra (Tamanho máximo: %i caracteres): ", SIZE);
+	scanf("%s", string);
+
+	printf("Palavra invetida: ");
+
+	int i;
+	for (i = SIZE-1; i >= 0; --i) {
+		printf("%c", string[i]);
+	}
+
+	printf("\n");
+
+	return 0;
+}

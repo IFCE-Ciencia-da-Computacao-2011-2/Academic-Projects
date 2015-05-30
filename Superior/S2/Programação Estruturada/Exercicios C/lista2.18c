@@ -1,0 +1,33 @@
+/*
+ Escrever um programa que calcule e apresente o somatorio do numero de gr~aos de trigo que se pode
+obter num tabuleiro de xadrez, obedecendo a seguinte regra: colocar um gr~ao de trigo no primeiro
+quadro e nos quadros seguintes o dobro do quadro anterior. Ou seja, no primeiro quadro coloca-se um
+gr~ao, no segundo quadro colocam-se dois gr~aos (tendo neste momento tr^es gr~aos), no terceiro quadro
+colocam-se quatro gr~aos (tendo neste momento sete gr~aos), no quarto quadro colocam-se oito gr~aos
+(tendo-se ent~ao quinze gr~aos) ate atingir o sexagesimo quarto quadro.
+*/
+
+#include <stdio.h>
+#include <stdio.h>
+#define LADO 8
+
+// Máximo calculado:              4.294.967.295
+// Resposta correta: 18.446.744.073.709.551.615
+
+int main() {
+	unsigned long int total=0;
+
+	unsigned long int ultimoQuadro=1;
+	int area = LADO*LADO;
+
+	printf("Conta grãos\n ");
+
+	int quadroAtual;
+	for (quadroAtual = 0; quadroAtual < area; quadroAtual++) {
+		total += ultimoQuadro;
+		ultimoQuadro = ultimoQuadro << 1;
+		printf("Total atual: %lu\n", total);
+	}
+
+	printf("Total: %lu\n", total);
+}

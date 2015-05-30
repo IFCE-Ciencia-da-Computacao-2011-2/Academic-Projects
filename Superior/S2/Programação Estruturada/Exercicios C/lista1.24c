@@ -1,0 +1,14 @@
+/* Escreva um programa que calcule o produto entre um valor dado x por 2 elevado a um valor dado n.
+Obs.: Utilize operadores binarios.
+*/
+
+#include <stdio.h>
+#include <stdio.h>
+
+int main() {
+	int numero;
+	printf("Digite um número: ");
+	scanf("%d", &numero);
+
+	printf("\n Dobro: %d\n", numero<<1);
+}

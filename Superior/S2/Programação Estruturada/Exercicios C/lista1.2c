@@ -1,0 +1,21 @@
+/*
+ Faca um programa que leia um valor inteiro decimal X e escreva, na tela, este mesmo valor nas bases
+hexadecimal e octal.
+Ex.: Entre com o valor: 10
+Hexadecimal: A
+Octal: 12*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+	int numero;
+	printf("Digite um numero: ");
+	scanf("%d", &numero);
+
+	printf("\nDecimal:     %d", numero);
+	printf("\nOctal:      (%o)8", numero);
+	printf("\nHexadecimal: %Xh\n", numero);
+
+	return 0;
+}

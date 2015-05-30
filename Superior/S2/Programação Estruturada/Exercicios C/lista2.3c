@@ -1,0 +1,21 @@
+/*
+ Escreva um programa que leia um numero inteiro e positivo F e calcule o fatorial deste numero.
+ */
+
+
+#include <stdio.h>
+#include <stdio.h>
+
+int main() {
+	unsigned long int numero;
+	printf("Digite um número: ");
+	scanf("%lu", &numero);
+
+	unsigned long int fatorial = 1;
+	while(numero > 1) {
+		fatorial *= numero;
+		numero--;
+	}
+
+	printf("Fatorial: %lu\n", fatorial);
+}

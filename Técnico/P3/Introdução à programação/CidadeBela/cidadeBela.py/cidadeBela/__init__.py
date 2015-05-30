@@ -1,0 +1,1 @@
+#__all__ = ['portas.py', 'janelas.py', 'tetos.py', 'matetatica.py', 'cores.py']

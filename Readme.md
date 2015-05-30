@@ -2,7 +2,7 @@
 
 Resume of all simple academic works
 
-# Técnico
+## Técnico
 
 **IFCE - Campus Fortaleza**
 **2009.2** - Técnico Integrado em Informática
@@ -15,7 +15,7 @@ Resume of all simple academic works
  - **Projects:** Chat
 
 
-# Superior
+## Superior
 
 **IFCE - Campus Maracanaú**
 **2013.2** - Bacharelado em Ciência da Computação

@@ -1,0 +1,1 @@
+call setup.py build

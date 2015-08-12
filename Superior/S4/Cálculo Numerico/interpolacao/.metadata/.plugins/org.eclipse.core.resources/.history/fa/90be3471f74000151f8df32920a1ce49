@@ -1,0 +1,21 @@
+package interpolacao.lagrante.polinomio.test;
+
+import interpolacao.lagrante.polinomio.Polinomio;
+import interpolacao.lagrante.polinomio.Termo;
+
+public class PolinomioTest {
+	
+	public static void main(String[] args) {
+		addTest();
+	}
+
+	private static void addTest() {
+		Polinomio y1 = new Polinomio();
+		y1.add(new Termo(2, 0))
+		  .add(new Termo(2, 2))
+		  .add(new Termo(2, 3))
+		  .add(new Termo(2, 4));
+
+		Polinomio y2 = new Polinomio();
+	}
+}

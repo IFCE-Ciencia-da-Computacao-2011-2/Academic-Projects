@@ -1,0 +1,29 @@
+package interpolacao.newton;
+
+import interpolacao.Raizes;
+
+public class TabelaDeDiferencasDivididas {
+	private Raizes raizes;
+
+	public TabelaDeDiferencasDivididas(Raizes raizes) {
+		this.raizes = raizes;
+	}
+
+	class Ordem {
+		private int numero;
+		private elementos;
+
+		Ordem gerarOrdem() {
+			
+		}
+	}
+	
+	class FuncaoDiferenca {
+
+		double valor;
+
+		public FuncaoDiferenca(double valor) {
+			this.valor = valor;
+		}
+	}
+}

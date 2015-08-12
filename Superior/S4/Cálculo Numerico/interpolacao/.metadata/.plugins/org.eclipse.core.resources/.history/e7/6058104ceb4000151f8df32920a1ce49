@@ -1,0 +1,9 @@
+package interpolacao.newton.tabela_diferenca;
+
+import interpolacao.Coordenada;
+
+class GeradorOrdemZero {
+	static GeradorOrdem gerar(Coordenadas) {
+		
+	}
+}

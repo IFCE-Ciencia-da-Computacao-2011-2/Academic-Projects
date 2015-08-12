@@ -1,0 +1,5 @@
+package interpolacao.newton.tabela_diferenca;
+
+public class FuncaoDiferencaBase {
+
+}

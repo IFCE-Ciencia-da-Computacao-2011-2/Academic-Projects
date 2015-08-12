@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?><testrun name="PolinomioTeste" project="Interpolação" tests="3" started="3" failures="0" errors="0" ignored="0">
+  <testsuite name="interpolacao.lagrante.polinomio.test.PolinomioTeste" time="0.0">
+    <testcase name="somarComTest" classname="interpolacao.lagrante.polinomio.test.PolinomioTeste" time="0.0"/>
+    <testcase name="equalsTest" classname="interpolacao.lagrante.polinomio.test.PolinomioTeste" time="0.0"/>
+    <testcase name="getTermoTest" classname="interpolacao.lagrante.polinomio.test.PolinomioTeste" time="0.0"/>
+  </testsuite>
+</testrun>

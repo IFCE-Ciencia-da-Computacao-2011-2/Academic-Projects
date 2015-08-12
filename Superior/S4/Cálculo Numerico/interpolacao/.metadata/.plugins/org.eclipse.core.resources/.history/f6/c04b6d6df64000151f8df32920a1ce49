@@ -1,0 +1,50 @@
+package interpolacao.lagrante.polinomio;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+public class Polinomio {
+
+	private List<Termo> termos;
+
+	public Polinomio() {
+		termos = new ArrayList<>();
+	}
+
+	public Polinomio somarCom(Polinomio polinomio) {
+		Polinomio resultado = new Polinomio();
+
+		for (Termo termo : termos) {
+			
+		}
+		return null;
+	}
+
+	public void add(Termo termo) {
+		Termo termoJaComputado = getTermo(termo.getExpoente());
+
+		termoJaComputado.add(termoJaComputado)
+		this.termos.add(termo);
+	}
+
+	protected Termo getTermo(int expoente) {
+		for (Termo termo : termos)
+			if (termo.getExpoente() == expoente)
+				return termo;
+
+		return new Termo(0, expoente);
+	}
+
+	public Polinomio multiplica(Polinomio outro) {
+		return null;
+	}
+
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (Termo termo : termos)
+			builder.append(" " + termo);
+
+		return builder.toString();
+	}
+}

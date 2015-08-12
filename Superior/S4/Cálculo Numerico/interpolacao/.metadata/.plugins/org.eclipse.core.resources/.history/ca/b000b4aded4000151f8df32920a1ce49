@@ -1,0 +1,33 @@
+package interpolacao.newton.tabela_diferenca;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import interpolacao.Coordenada;
+import interpolacao.Coordenadas;
+
+public class TabelaDeDiferencasDivididas {
+	private Coordenadas raizes;
+	private List<Ordem> ordens;
+
+	public TabelaDeDiferencasDivididas(Coordenadas coordenadas) {
+		this.raizes = coordenadas;
+
+		Ordem ordem0 = GeradorOrdemZero.gerarPara(coordenadas);
+		this.ordens = gerarOrdensAPartirDe(ordem0);
+	}
+
+	private List<Ordem> gerarOrdensAPartirDe(Ordem ordem0) {
+		Optional<Ordem> ordemPonteiro = Optional.of(ordem0);
+
+		List<Ordem> ordens = new ArrayList<>();
+
+		while (ordemPonteiro.isPresent()) {
+			ordens.add(ordemPonteiro.get());
+			ordemPonteiro = ordemPonteiro.get().gerarOrdem();
+		}
+
+		return ordens;
+	}
+}

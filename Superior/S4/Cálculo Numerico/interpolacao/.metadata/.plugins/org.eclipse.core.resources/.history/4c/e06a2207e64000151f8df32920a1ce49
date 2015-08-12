@@ -1,0 +1,11 @@
+package interpolacao;
+
+public class Coordenada<K, V> {
+	public K chave;
+	public V valor;
+
+	public Coordenada(K chave, V valor) {
+		this.chave = chave;
+		this.valor = valor;
+	}
+}

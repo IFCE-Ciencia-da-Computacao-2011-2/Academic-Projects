@@ -1,0 +1,24 @@
+package interpolacao.lagrante.polinomio;
+
+public class Termo {
+
+	private double coeficiente;
+	private int expoente;
+
+	public Termo(double coeficiente, int expoente) {
+		this.coeficiente = coeficiente;
+		this.expoente = expoente;
+	}
+
+	public double getCoeficiente() {
+		return coeficiente;
+	}
+
+	public int getExpoente() {
+		return expoente;
+	}
+
+	public String toString() {
+		return coeficiente + "x^" + expoente;
+	}
+}    

@@ -1,0 +1,32 @@
+1439378808450	Rename package 'inpterpolacao.newton'
+1439379193078	Delete element
+1439379234954	Rename type 'ChaveValor'
+1439379241119	Rename local variable 'chave'
+1439379245170	Rename local variable 'valor'
+1439379248494	Rename field 'chave'
+1439379251436	Rename field 'valor'
+1439380004674	Rename field 'elementos'
+1439380329878	Encapsulate field 'maiorX'
+1439380333712	Encapsulate field 'menorX'
+1439380894628	Rename field 'pai1'
+1439380899236	Rename field 'pai2'
+1439380907553	Rename local variable 'pai1'
+1439380912233	Rename local variable 'pai2'
+1439381222276	Move compilation unit
+1439381229264	Delete element
+1439381247750	Rename type 'FuncaoDiferenaBase'
+1439381355354	Move compilation unit
+1439381438453	Rename type 'Raizes'
+1439381844838	Rename local variable 'raizes'
+1439381954977	Extract method 'gerarOrdem'
+1439382178680	Extract method 'isUltimaOrdem'
+1439382242820	Extract method 'gerarFuncoesDeOrdemFilha'
+1439382258589	Rename method 'gerarFuncoesDeOrdemFilha'
+1439382438861	Rename method 'gerarOrdem'
+1439382550021	Rename field 'raizes'
+1439382783035	Rename local variable 'raizes'
+1439382948386	Rename field 'numero'
+1439386242750	Rename method 'add'
+1439387610221	Delete element
+1439389118175	Rename field 'raizes'
+1439389297654	Rename field 'coodenadas'

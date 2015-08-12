@@ -1,0 +1,34 @@
+package interpolacao.lagrante.polinomio;
+
+import java.util.LinkedList;
+import java.util.List;
+
+public class Polinomio {
+
+	private List<Termo> termos;
+
+	public Polinomio() {
+		termos = new LinkedList<>();
+	}
+
+	public void add(Termo termo) {
+		this.termos.add(termo);
+	}
+
+	public Polinomio somarCom(Polinomio polinomio) {
+		polinomio.termos
+		return null;
+	}
+
+	public Polinomio multiplica(Polinomio outro) {
+		return null;
+	}
+
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (Termo termo : termos)
+			builder.append(" " + termo);
+
+		return builder.toString();
+	}
+}

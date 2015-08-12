@@ -1,0 +1,11 @@
+package interpolacao;
+
+public class ChaveValor<K, V> {
+	public K chave;
+	public V valor;
+
+	public ChaveValor(K chave, V valor) {
+		this.chave = chave;
+		this.valor = valor;
+	}
+}

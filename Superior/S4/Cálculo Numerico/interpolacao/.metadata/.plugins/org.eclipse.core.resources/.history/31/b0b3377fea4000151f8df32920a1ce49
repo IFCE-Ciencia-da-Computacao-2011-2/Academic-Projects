@@ -1,0 +1,100 @@
+package interpolacao.newton;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import interpolacao.Coordenada;
+import interpolacao.Raizes;
+
+public class TabelaDeDiferencasDivididas {
+	private Raizes raizes;
+
+	public TabelaDeDiferencasDivididas(Raizes raizes) {
+		this.raizes = raizes;
+	}
+
+	class Ordem {
+		private int numero;
+		private List<FuncaoDiferenca> funcoes;
+
+		public Ordem() {
+			this(0);
+		}
+
+		public Ordem(int numero) {
+			this.numero = numero;
+			this.funcoes = new ArrayList<>();
+		}
+
+		Ordem gerarOrdem() {
+			List<FuncaoDiferenca> funcoesNovaOrdem = new ArrayList<>();
+
+			for (int i = 0; i < funcoes.size()-1; i++) {
+				FuncaoDiferenca funcaoIPlus1 = funcoes.get(i+1);
+				FuncaoDiferenca funcaoI = funcoes.get(i);
+				funcoesNovaOrdem.add(funcaoIPlus1.gerarCom(funcaoI));
+			}
+		}
+	}
+
+	interface FuncaoDiferenca {
+		Coordenada getMaiorX();
+		Coordenada getMenorX();
+		
+		double valor();
+	}
+	
+	class FuncaoDiferencaBase implements FuncaoDiferenca {
+		private Coordenada coordenada;
+		
+		public FuncaoDiferencaBase(Coordenada coordenada) {
+			this.coordenada = coordenada;
+		}
+
+		@Override
+		public Coordenada getMaiorX() {
+			return this.coordenada;
+		}
+
+		@Override
+		public Coordenada getMenorX() {
+			return this.coordenada;
+		}
+
+		@Override
+		public double valor() {
+			return coordenada.y;
+		}
+	}
+
+	class FuncaoDiferencaFilho implements FuncaoDiferenca {
+
+		private FuncaoDiferenca paiMenor;
+		private FuncaoDiferenca paiMaior;
+
+		public FuncaoDiferencaFilho(FuncaoDiferenca paiMenor, FuncaoDiferenca paiMaior) {
+			this.paiMenor = paiMenor;
+			this.paiMaior = paiMaior;
+		}
+
+		public FuncaoDiferenca gerarCom(FuncaoDiferenca funcaoAnterior) {
+			
+			return new FuncaoDiferenca(valor);
+			return null;
+		}
+
+		@Override
+		public Coordenada getMaiorX() {
+			return paiMaior.getMaiorX();
+		}
+
+		@Override
+		public Coordenada getMenorX() {
+			return paiMenor.getMenorX();
+		}
+
+		public double valor() {
+			return (this.paiMaior.valor() - paiMenor.valor()) / (this.getMaiorX().x - this.getMenorX().x);
+		}
+	}
+}

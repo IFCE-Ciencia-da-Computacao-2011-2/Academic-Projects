@@ -1,0 +1,18 @@
+package interpolacao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Coordenadas {
+
+	private List<Coordenada> raizes;
+
+	public Coordenadas() {
+		this.raizes = new ArrayList<Coordenada>();
+	}
+
+	public Coordenadas add(double fDeX, double x) {
+		this.raizes.add(new Coordenada(x, fDeX));
+		return this;
+	}
+}

@@ -1,0 +1,15 @@
+package interpolacao.lagrante.polinomio.test;
+
+import interpolacao.lagrante.polinomio.Polinomio;
+
+public class PolinomioTest {
+	
+	public static void main(String[] args) {
+		addTest();
+	}
+
+	private static void addTest() {
+		Polinomio y1 = new Polinomio();
+		Polinomio y2 = new Polinomio();
+	}
+}

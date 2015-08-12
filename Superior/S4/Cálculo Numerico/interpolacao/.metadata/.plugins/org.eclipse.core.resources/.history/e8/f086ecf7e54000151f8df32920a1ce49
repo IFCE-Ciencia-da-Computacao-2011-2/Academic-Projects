@@ -1,0 +1,19 @@
+package interpolacao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Raizes {
+
+	private List<ChaveValor<Double, Double>> raizes;
+
+	public Raizes() {
+		this.raizes = new ArrayList<ChaveValor<Double, Double>>();
+	}
+
+	public Raizes add(double fDeX, double x) {
+		this.raizes.add(new ChaveValor<Double, Double>(fDeX, x))
+		return this;
+		// TODO Auto-generated method stub
+	}
+}

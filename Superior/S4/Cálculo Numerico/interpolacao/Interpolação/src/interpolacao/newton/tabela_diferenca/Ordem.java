@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-class Ordem {
+public class Ordem {
 	private int ordem;
 	private List<FuncaoDiferenca> funcoes;
 
@@ -45,6 +45,10 @@ class Ordem {
 
 	private boolean isUltimaOrdem() {
 		return funcoes.size() == 1;
+	}
+	
+	public List<FuncaoDiferenca> funcoes() {
+		return funcoes;
 	}
 
 	@Override

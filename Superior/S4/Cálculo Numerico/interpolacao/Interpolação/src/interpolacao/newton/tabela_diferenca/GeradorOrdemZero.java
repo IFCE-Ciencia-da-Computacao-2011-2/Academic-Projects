@@ -3,8 +3,8 @@ package interpolacao.newton.tabela_diferenca;
 import java.util.ArrayList;
 import java.util.List;
 
-import interpolacao.Coordenada;
-import interpolacao.Coordenadas;
+import interpolacao.util.coordenadas.Coordenada;
+import interpolacao.util.coordenadas.Coordenadas;
 
 class GeradorOrdemZero {
 	static Ordem gerarPara(Coordenadas coordenadas) {

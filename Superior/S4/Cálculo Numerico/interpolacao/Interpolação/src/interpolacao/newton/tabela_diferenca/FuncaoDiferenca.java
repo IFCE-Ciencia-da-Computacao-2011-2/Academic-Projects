@@ -1,8 +1,8 @@
 package interpolacao.newton.tabela_diferenca;
 
-import interpolacao.Coordenada;
+import interpolacao.util.coordenadas.Coordenada;
 
-interface FuncaoDiferenca {
+public interface FuncaoDiferenca {
 	Coordenada getMaiorX();
 	Coordenada getMenorX();
 	

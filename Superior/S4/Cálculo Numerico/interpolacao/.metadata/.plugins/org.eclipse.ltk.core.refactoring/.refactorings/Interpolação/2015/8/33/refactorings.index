@@ -30,3 +30,57 @@
 1439387610221	Delete element
 1439389118175	Rename field 'raizes'
 1439389297654	Rename field 'coodenadas'
+1439644987168	Rename package 'interpolacao.lagrante.polinomio'
+1439644993045	Rename package 'interpolacao.lagrante.polinomio.test'
+1439644998837	Rename package 'interpolacao.lagrante'
+1439645375242	Extract method 'pegarCoordenadas'
+1439645566214	Extract method 'pegarXInterpolador'
+1439645837315	Rename local variable 'xinterpol'
+1439646121557	Rename local variable 'xinterpol'
+1439647236295	Rename type 'Teste'
+1439647941318	Rename local variable 'xInterpol'
+1439648928284	Rename type 'L'
+1439649032554	Extract local variable 'Xj'
+1439651343095	Delete element
+1439653987356	Rename local variable 'produtoNumerador'
+1439653991439	Rename local variable 'produtoDenominador'
+1439654602431	Rename local variable 'i'
+1439655118718	Rename type 'LResultado'
+1439655437074	Extract method 'calcularLs'
+1439656298944	Rename local variable 'yinterpol'
+1439656311497	Rename local variable 'yInterpol'
+1439656793934	Delete element
+1439656817594	Rename type 'LagrangeLeo'
+1439657232045	Move compilation units
+1439657748825	Move compilation units
+1439657805952	Delete element
+1439657815990	Rename package 'interpolacao.polinomio'
+1439657824406	Rename package 'interpolacao.polinomio.test'
+1439657834778	Move package
+1439657841063	Rename package 'interpolacao.util.polinomio.test'
+1439657843678	Move package
+1439657848729	Rename package 'interpolacao.sistemaLinear.test'
+1439657858062	Rename package 'interpolacao.coordenadas'
+1439657886034	Move packages
+1439657937214	Delete element
+1439658584615	Move compilation units
+1439658863073	Rename type 'InterpolacaoPorSistemaLinear'
+1439660778586	Extract method 'gerarSistemaLinearPara'
+1439660944078	Extract method 'gerarXElevados'
+1439662281112	Extract method 'gerarPolinomioResultado'
+1439662367914	Rename field 'interpolado'
+1439664687566	Extract method 'equacaoPolinomial'
+1439664757450	Extract method 'detalhesEquacaoPolinomial'
+1439665978200	Rename field 'diferencasDivididasImportantes'
+1439665981768	Rename field 'diferencasImportantes'
+1439666538525	Delete element
+1439668062817	Extract method 'gerarTermoPolinomioNewton'
+1439668076270	Rename local variable 'i'
+1439669778558	Extract method 'gerar'
+1439669931331	Rename local variable 'diferenca'
+1439670008073	Rename local variable 'indiceTermo'
+1439670138534	Rename local variable 'fx0axi'
+1439670160578	Extract method 'transformarEmTermo'
+1439670169011	Rename local variable 'fX0ateXi'
+1439670229800	Rename local variable 'fX0ateXi'
+1439670234480	Rename local variable 'termoDiferenca'

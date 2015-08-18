@@ -1,6 +1,6 @@
 package interpolacao.newton.tabela_diferenca;
 
-import interpolacao.Coordenadas;
+import interpolacao.util.coordenadas.Coordenadas;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class TabelaDeDiferencasDivididas {
 		return ordens;
 	}
 	
-	List<Ordem> ordens() {
+	public List<Ordem> ordens() {
 		return ordens;
 	}
 	
@@ -39,8 +39,9 @@ public class TabelaDeDiferencasDivididas {
 		StringBuilder builder = new StringBuilder();
 		
 		// Cabeçalho
+		builder.append("N° Ordem |");
 		for (int i = 0; i < coordenadas.size(); i++)
-			builder.append("____x"+ i +"____|");
+			builder.append("___x"+ i +"___|");
 		builder.append("\n");
 
 		// Ordens

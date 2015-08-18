@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.junit.launchconfig">
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/Interpolação/src/interpolacao/lagrante/polinomio/test/PolinomioTeste.java"/>
+<listEntry value="/Interpolação/matematica.test/matematica/polinomio/PolinomioTeste.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
@@ -10,7 +10,7 @@
 <booleanAttribute key="org.eclipse.jdt.junit.KEEPRUNNING_ATTR" value="false"/>
 <stringAttribute key="org.eclipse.jdt.junit.TESTNAME" value="somarComTest"/>
 <stringAttribute key="org.eclipse.jdt.junit.TEST_KIND" value="org.eclipse.jdt.junit.loader.junit4"/>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="interpolacao.lagrante.polinomio.test.PolinomioTeste"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="matematica.polinomio.PolinomioTeste"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="Interpolação"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value=""/>
 </launchConfiguration>

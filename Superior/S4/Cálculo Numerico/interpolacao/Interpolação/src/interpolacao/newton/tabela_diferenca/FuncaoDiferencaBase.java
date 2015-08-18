@@ -1,6 +1,6 @@
 package interpolacao.newton.tabela_diferenca;
 
-import interpolacao.Coordenada;
+import interpolacao.util.coordenadas.Coordenada;
 
 class FuncaoDiferencaBase implements FuncaoDiferenca {
 	private Coordenada coordenada;
@@ -21,6 +21,6 @@ class FuncaoDiferencaBase implements FuncaoDiferenca {
 
 	@Override
 	public double valor() {
-		return coordenada.y;
+		return coordenada.y();
 	}
 }

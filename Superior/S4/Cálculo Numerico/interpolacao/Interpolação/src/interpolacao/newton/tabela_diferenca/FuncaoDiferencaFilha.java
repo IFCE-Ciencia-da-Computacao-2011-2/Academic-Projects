@@ -1,6 +1,6 @@
 package interpolacao.newton.tabela_diferenca;
 
-import interpolacao.Coordenada;
+import interpolacao.util.coordenadas.Coordenada;
 
 class FuncaoDiferencaFilha implements FuncaoDiferenca {
 
@@ -23,6 +23,6 @@ class FuncaoDiferencaFilha implements FuncaoDiferenca {
 	}
 
 	public double valor() {
-		return (this.paiMaior.valor() - paiMenor.valor()) / (this.getMaiorX().x - this.getMenorX().x);
+		return (this.paiMaior.valor() - paiMenor.valor()) / (this.getMaiorX().x() - this.getMenorX().x());
 	}
 }

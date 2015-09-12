@@ -6,6 +6,6 @@
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>
 </listAttribute>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="matematica.polinomio.PolinomioTest"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="matematica.geral.polinomio.PolinomioTest"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="Interpolação"/>
 </launchConfiguration>

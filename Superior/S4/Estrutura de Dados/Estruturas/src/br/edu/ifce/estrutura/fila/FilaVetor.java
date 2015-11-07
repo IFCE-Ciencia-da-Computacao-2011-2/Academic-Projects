@@ -4,43 +4,44 @@ import java.util.NoSuchElementException;
 
 public class FilaVetor<Elemento> implements Fila<Elemento> {
 
-	private static int FATOR_CRESCIMENTO = 2;
+	private static final int FATOR_CRESCIMENTO = 2;
 
 	private Elemento[] elementos;
 
-	private int inicio;
+	private int primeiro;
 	// Posição que se encontra o elemento do final da fila
-	private int fim;
+	private int proximo;
 
 	private int quantidade;
 
-	@SuppressWarnings("unchecked")
 	public FilaVetor() {
-		inicio = 0;
-		fim = 0;
-		elementos = (Elemento[]) new Object[10];
+		this(10);
+	}
+
+	@SuppressWarnings("unchecked")
+	public FilaVetor(int quantidade) {
+		primeiro = 0;
+		proximo = 0;
+		elementos = (Elemento[]) new Object[quantidade];
 	}
 
 	@Override
 	public void enqueue(Elemento elemento) {
-		if (!podeAdicionar())
+		if (isLotado())
 			aumentarEspacoAo(FATOR_CRESCIMENTO);
 
-		if (apontaParaOFim(fim) || fim == 0 && size() == 0)
-			fim = -1;
-
-		fim++;
-		elementos[fim] = elemento;
+		elementos[proximo] = elemento;
+		proximo = proximoIndiceDe(proximo);
 
 		quantidade++;
 	}
 
-	private boolean apontaParaOFim(int ponteiro) {
-		return ponteiro == elementos.length-1;
+	private boolean isLotado() {
+		return quantidade == elementos.length;
 	}
 
-	private boolean podeAdicionar() {
-		return quantidade < elementos.length;
+	private boolean apontaParaOFim(int ponteiro) {
+		return ponteiro == elementos.length-1;
 	}
 
 	@Override
@@ -48,16 +49,13 @@ public class FilaVetor<Elemento> implements Fila<Elemento> {
 		if (isVazio())
 			throw new NoSuchElementException();
 
-		elementos[inicio] = null;
-
-		if (apontaParaOFim(inicio))
-			inicio = -1;
-
-		inicio++;
+		elementos[primeiro] = null;
+		primeiro = proximoIndiceDe(primeiro);
 		quantidade--;
-		
-		if (size() == 0)
-			fim = 0;
+	}
+	
+	private int proximoIndiceDe(int index) {
+		return apontaParaOFim(index) ? 0 : index + 1;
 	}
 
 	private boolean isVazio() {
@@ -69,7 +67,7 @@ public class FilaVetor<Elemento> implements Fila<Elemento> {
 		if (isVazio())
 			throw new NoSuchElementException();
 
-		return elementos[inicio];
+		return elementos[primeiro];
 	}
 
 	@Override
@@ -77,43 +75,23 @@ public class FilaVetor<Elemento> implements Fila<Elemento> {
 		return quantidade;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void aumentarEspacoAo(int fatorCrescimento) {
-		Elemento[] novaListaDeElementos = (Elemento[]) new Object[elementos.length * fatorCrescimento];
+		FilaVetor<Elemento> fila = new FilaVetor<>(elementos.length * fatorCrescimento);
+		
+		while (!this.isVazio()) {
+			Elemento elemento = this.first();
+			this.dequeue();
 
-		if (fim > inicio)
-			novaListaDeElementos = reorganizarDeFormaNormal(novaListaDeElementos);
-		else
-			novaListaDeElementos = reorganizarDeFormaCuidadosa(novaListaDeElementos);
-
-		inicio = 0;
-		fim = quantidade-1;
-
-		this.elementos = novaListaDeElementos;
+			fila.enqueue(elemento);
+		}
+		
+		substituirPor(fila);
 	}
 
-	private Elemento[] reorganizarDeFormaNormal(Elemento[] lista) {
-		int j = 0;
-		for (int i=inicio; i<=fim; i++) {
-			lista[j] = this.elementos[i];
-			j++;
-		}
-
-		return lista;
-	}
-
-	private Elemento[] reorganizarDeFormaCuidadosa(Elemento[] lista) {
-		int j = 0;
-		for (int i=inicio; i<this.elementos.length; i++) {
-			lista[j] = this.elementos[i];
-			j++;
-		}
-
-		for (int i=0; i<=this.fim; i++) {
-			lista[j] = this.elementos[i];
-			j++;
-		}
-
-		return lista;
+	private void substituirPor(FilaVetor<Elemento> fila) {
+		this.elementos = fila.elementos;
+		this.primeiro = fila.primeiro;
+		this.proximo = fila.proximo;
+		this.quantidade = fila.quantidade;
 	}
 }

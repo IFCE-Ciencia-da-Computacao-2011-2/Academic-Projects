@@ -1,7 +1,7 @@
 package br.edu.ifce.estrutura.lista;
 
 
-public class ListaEncadeada<Elemento> implements ListED<Elemento> {
+public class ListaEncadeada<Elemento> implements Lista<Elemento> {
 	
 	private class Celula<E> {
 		private E elemento;

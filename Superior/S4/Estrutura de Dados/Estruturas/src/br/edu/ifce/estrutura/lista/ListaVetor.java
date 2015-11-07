@@ -1,6 +1,6 @@
 package br.edu.ifce.estrutura.lista;
 
-public class ListaVetor<Elemento> implements ListED<Elemento> {
+public class ListaVetor<Elemento> implements Lista<Elemento> {
 	
 	private static int FATOR_CRESCIMENTO = 2;
 

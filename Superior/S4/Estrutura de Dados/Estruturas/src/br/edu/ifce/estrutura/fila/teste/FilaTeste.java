@@ -116,11 +116,11 @@ public class FilaTeste extends TestCase {
 		fila.enqueue(SEGUNDO);
 		fila.enqueue(TERCEIRO);
 		
-		assertEquals(fila.first(), PRIMEIRO);
+		assertEquals(PRIMEIRO, fila.first());
 		fila.dequeue();
-		assertEquals(fila.first(), SEGUNDO);
+		assertEquals(SEGUNDO,  fila.first());
 		fila.dequeue();
-		assertEquals(fila.first(), TERCEIRO);
+		assertEquals(TERCEIRO, fila.first());
 		fila.dequeue();
 	}
 	

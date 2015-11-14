@@ -1,5 +1,9 @@
 package br.edu.ifce.estrutura.arvore;
 
+import java.util.Iterator;
+
+import br.edu.ifce.estrutura.arvore.Visitador.TipoVisita;
+
 public class ArvoreBinaria<E> {
 
 	private No<E> raiz;
@@ -33,6 +37,10 @@ public class ArvoreBinaria<E> {
 			anterior.direita = aInserir;
 		else 
 			anterior.esquerda = aInserir;
+	}
+	
+	public void remover() {
+		
 	}
 
 	public E buscar(int chave) {
@@ -125,5 +133,23 @@ public class ArvoreBinaria<E> {
 			no = no.pai;
 
 		return no.pai;
+	}
+	
+	
+	public Iterator<E> preOrder() {
+		return visitar(Visitador.PreOrder);
+	}
+
+	public Iterator<E> posOrder() {
+		return visitar(Visitador.PosOrder);
+	}
+	
+	public Iterator<E> inOrder() {
+		return visitar(Visitador.InOrder);
+	}
+
+	private Iterator<E> visitar(TipoVisita tipoVisitar) {
+		Visitador<E> visitador = new Visitador<>(tipoVisitar);
+		return visitador.visitar(raiz);
 	}
 }

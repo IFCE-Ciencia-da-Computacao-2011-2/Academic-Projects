@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.Iterator;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -103,5 +105,30 @@ public class ArvoreBinariaTeste {
 		assertEquals(4, (int) arvore.antecessor(5));
 
 		assertNull(arvore.antecessor(123));
+	}
+	
+	@Test
+	public void preOrder() {
+		orderTest(arvore.preOrder(), 1, 2, 3, 4, 5);
+	}
+
+	@Test
+	public void posOrder() {
+		orderTest(arvore.posOrder(), 5, 4, 3, 2, 1);
+	}
+
+	@Test
+	public void inOrder() {
+		orderTest(arvore.inOrder(), 4, 2, 1, 3, 5);
+	}
+
+	private void orderTest(Iterator<Integer> iterator, int ... ordem) {
+		int i = 0;
+
+		while (iterator.hasNext()) {
+			Integer elemento = iterator.next();
+			assertEquals(ordem[i], (int) elemento);
+			i++;
+		}
 	}
 }

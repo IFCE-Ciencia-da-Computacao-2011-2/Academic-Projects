@@ -39,8 +39,63 @@ public class ArvoreBinaria<E> {
 			anterior.esquerda = aInserir;
 	}
 	
-	public void remover() {
+	public void remover(int chave) {
+		No<E> no = buscar(chave, raiz);
+		if (no == null)
+			return;
+
+		remover(no);
+	}
+
+	private void remover(No<E> no) {
+		if (no.isFolha())
+			removerNoFolha(no);
 		
+		else if (no.hasUnicoFilho())
+			removerNoComUmFilho(no);
+		
+		else if (no.direita == minDe(no.direita))
+			removerNoComProximoADireita(no);
+
+		else
+			removerNoComProximoNaoADireita(no);
+	}
+
+	private void removerNoFolha(No<E> no) {
+		if (no.isFilhoAEsquerda())
+			no.pai.esquerda = null;
+		else
+			no.pai.direita = null;
+	}
+
+	private void removerNoComUmFilho(No<E> no) {
+		No<E> noFilho = no.esquerda != null ? no.esquerda : no.direita;
+
+		if (no.isFilhoAEsquerda())
+			no.pai.esquerda = noFilho;
+		else
+			no.pai.direita = noFilho;
+
+		noFilho.pai = no.pai;
+	}
+	
+	private void removerNoComProximoADireita(No<E> no) {
+		No<E> substituidor = no.direita;
+
+		no.pai.direita = substituidor;
+		substituidor.pai = no.pai;
+		substituidor.esquerda = no.esquerda;
+		
+	}
+
+	private void removerNoComProximoNaoADireita(No<E> no) {
+		No<E> substituidor = minDe(no.direita);
+		remover(substituidor);
+
+		substituidor.pai = no.pai;
+		no.pai.direita = substituidor;
+		substituidor.direita = no.direita;
+		substituidor.esquerda = no.esquerda;
 	}
 
 	public E buscar(int chave) {

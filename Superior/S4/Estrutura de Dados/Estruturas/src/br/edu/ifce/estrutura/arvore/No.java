@@ -26,4 +26,13 @@ class No<E> {
 	public boolean isFilhoAEsquerda() {
 		return hasPai() && pai.esquerda == this;
 	}
+	
+	public boolean isFolha() {
+		return esquerda == null && direita == null;
+	}
+
+	public boolean hasUnicoFilho() {
+		return esquerda == null && direita != null 
+			|| direita == null && esquerda != null;
+	}
 }

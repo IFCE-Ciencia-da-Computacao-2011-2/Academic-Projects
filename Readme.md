@@ -25,10 +25,25 @@ Resume of all simple academic works
  - **Projects:** BuscaPalavras (Find Words)
 * **S2 - Programação Estruturada _(Structured Programming)_**
  - **Language:** C
- - **Projects:** ManipulaImagem (A ultra very simple terminal Photoshop), Exercícios C (Exercices)
+ - **Projects:**
+   * ManipulaImagem (A ultra very simple terminal Photoshop)
+   * Exercícios C (Exercices)
 * **S3 - Programação Orientada a Objetos _(OOP)_**
  - **Language:** Java
  - **Projects:** Exercices
 * **S4 - Estrutura de Dados _(Data Structure)_**
  - **Language:** Java
- - **Projects:** Exercices
+ - **Projects:**
+   * Árvore binária de busca
+   * Fila encadeada
+   * Fila vetor
+   * Lista encadeada
+   * Lista duplamente encadeada
+   * Lista vetor
+   * Pilha encadeada
+   * Pilha vetor
+* **S4 - Cálculo Numérico**
+ - **Language:** Python / Java
+ - **Projects:**
+   * Raizes de funções
+   * [Matemática](https://github.com/SrMouraSilva/Matematica)

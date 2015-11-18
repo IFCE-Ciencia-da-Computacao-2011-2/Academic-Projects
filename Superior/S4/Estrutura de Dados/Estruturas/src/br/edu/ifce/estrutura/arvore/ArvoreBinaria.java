@@ -54,48 +54,60 @@ public class ArvoreBinaria<E> {
 		else if (no.hasUnicoFilho())
 			removerNoComUmFilho(no);
 		
-		else if (no.direita == minDe(no.direita))
-			removerNoComProximoADireita(no);
+		else {
+			No<E> sucessor = no.direita.min();
 
-		else
-			removerNoComProximoNaoADireita(no);
+			if (no.direita == sucessor)
+				removerNoComSucessorADireita(no);
+			else
+				removerNoComSucessorNaoADireita(no, sucessor);
+		}
 	}
 
 	private void removerNoFolha(No<E> no) {
-		if (no.isFilhoAEsquerda())
-			no.pai.esquerda = null;
+		transplantar(no, null);
+	}
+
+	private void transplantar(No<E> aSerSubstituido, No<E> substituidor) {
+		if (aSerSubstituido.isRaiz())
+			this.raiz = substituidor;
+
+		else if (aSerSubstituido.isFilhoADireita())
+			aSerSubstituido.pai.direita = substituidor;
 		else
-			no.pai.direita = null;
+			aSerSubstituido.pai.esquerda = substituidor;
+
+		if (substituidor != null)
+			substituidor.pai = aSerSubstituido.pai;
 	}
 
 	private void removerNoComUmFilho(No<E> no) {
 		No<E> noFilho = no.esquerda != null ? no.esquerda : no.direita;
-
-		if (no.isFilhoAEsquerda())
-			no.pai.esquerda = noFilho;
-		else
-			no.pai.direita = noFilho;
-
-		noFilho.pai = no.pai;
+		transplantar(no, noFilho);
 	}
 	
-	private void removerNoComProximoADireita(No<E> no) {
-		No<E> substituidor = no.direita;
+	private void removerNoComSucessorADireita(No<E> no) {
+		No<E> sucessor = no.direita;
 
-		no.pai.direita = substituidor;
-		substituidor.pai = no.pai;
-		substituidor.esquerda = no.esquerda;
-		
+		transplantar(no, sucessor);
+		sucessor.esquerda = no.esquerda;
 	}
 
-	private void removerNoComProximoNaoADireita(No<E> no) {
-		No<E> substituidor = minDe(no.direita);
-		remover(substituidor);
+	private void removerNoComSucessorNaoADireita(No<E> no, No<E> sucessor) {
+		remover(sucessor);
+		substituir(no, sucessor);
+	}
 
-		substituidor.pai = no.pai;
-		no.pai.direita = substituidor;
-		substituidor.direita = no.direita;
-		substituidor.esquerda = no.esquerda;
+	private void substituir(No<E> aSerSubstituido, No<E> substituidor) {
+		if (aSerSubstituido.isRaiz())
+			this.raiz = substituidor;
+		else {
+			substituidor.pai = aSerSubstituido.pai;
+			aSerSubstituido.pai.direita = substituidor;
+		}
+
+		substituidor.direita = aSerSubstituido.direita;
+		substituidor.esquerda = aSerSubstituido.esquerda;
 	}
 
 	public E buscar(int chave) {
@@ -114,82 +126,38 @@ public class ArvoreBinaria<E> {
 	}
 
 	public E min() {
-		No<E> menor = minDe(raiz);
-		return menor == null ? null : menor.valor;
-	}
+		if (raiz == null)
+			return null;
 
-	public No<E> minDe(No<E> noh) {
-		return extrema(
-			noh,
-			no -> no.esquerda != null,
-			no -> no.esquerda
-		);
+		No<E> menor = raiz.min();
+		return menor.valor;
 	}
 
 	public E max() {
-		No<E> maior = maxDe(raiz);
-		return maior == null ? null : maior.valor;
-	}
-
-	public No<E> maxDe(No<E> noh) {
-		return extrema(
-			noh,
-			no -> no.direita != null,
-			no -> no.direita
-		);
-	}
-
-	private No<E> extrema(No<E> raiz, Condicao condicao, Acao<E> acao) {
 		if (raiz == null)
-			return raiz;
+			return null;
 
-		No<E> no = raiz;
-		while (condicao.isVerdadeira(no))
-			no = acao.acao(no);
-
-		return no;
+		No<E> maior = raiz.max();
+		return maior.valor;
 	}
 
 	public E sucessor(int chave) {
 		No<E> no = buscar(chave, raiz);
-		No<E> sucessor = noSucessorDe(no);
-
-		return sucessor == null ? null : sucessor.valor;
-	}
-
-	private No<E> noSucessorDe(No<E> no) {
 		if (no == null)
 			return null;
 
-		if (no.direita != null)
-			return minDe(no.direita);
-
-		while (no.isFilhoADireita()) 
-			no = no.pai;
-
-		return no.pai;
+		No<E> sucessor = no.sucessor();
+		return sucessor == null ? null : sucessor.valor;
 	}
 
 	public E antecessor(int chave) {
 		No<E> no = buscar(chave, raiz);
-		No<E> antecessor = noAntecessorDe(no);
-
-		return antecessor == null ? null : antecessor.valor;
-	}
-	
-	private No<E> noAntecessorDe(No<E> no) {
 		if (no == null)
 			return null;
 
-		if (no.esquerda != null)
-			return maxDe(no.esquerda);
-
-		while (no.isFilhoAEsquerda()) 
-			no = no.pai;
-
-		return no.pai;
+		No<E> antecessor = no.antecessor();
+		return antecessor == null ? null : antecessor.valor;
 	}
-	
 	
 	public Iterator<E> preOrder() {
 		return visitar(Visitador.PreOrder);

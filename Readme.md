@@ -42,6 +42,7 @@ Resume of all simple academic works
    * Lista vetor
    * Pilha encadeada
    * Pilha vetor
+   * Heap (vector)
 * **S4 - Cálculo Numérico**
  - **Language:** Python / Java
  - **Projects:**

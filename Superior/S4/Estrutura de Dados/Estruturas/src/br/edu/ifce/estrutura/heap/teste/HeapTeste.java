@@ -81,4 +81,36 @@ public class HeapTeste {
 
 		} while (i < resultado.length);
 	}
+	
+	@Test
+	public void removerVazioTeste() {
+		Heap<Integer> heap = new Heap<>(16);
+		assertNull(heap.extrairMinimo());
+		assertEquals(0, heap.size());
+	}
+	
+	@Test
+	public void removerTeste2() {
+		Heap<Integer> heap = new Heap<>(16);
+		heap.add(2, 2);
+		heap.add(3, 3);
+		heap.add(5, 5);
+		heap.add(1, 1);
+		heap.add(10, 10);
+		heap.add(9, 9);
+		heap.add(5, 5);
+		heap.add(4, 4);
+		heap.add(2, 2);
+		heap.add(8, 8);
+		heap.add(6, 6);
+		heap.add(0, 0);
+		
+		int[] prioridades = {0, 1, 2, 2, 3, 4, 5, 5, 6, 8, 9, 10};
+		int posicao = 0;
+
+		while (heap.size() > 0) {
+			assertEquals(prioridades[posicao], heap.extrairMinimo().prioridade);
+			posicao++;
+		}
+	}
 }

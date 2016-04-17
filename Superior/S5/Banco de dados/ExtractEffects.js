@@ -46,8 +46,12 @@ class Efeito {
     parametros(id_efeito, ports) {
         let parametros = [];
 
-        for (let input of ports.control.input)
-            parametros.push({id_efeito : id_efeito, nome : input.name, minimo : input.minimum, maximo : input.maximum, valor_padrao : input.default});
+        for (let input of ports.control.input) {
+            let data = {id_efeito : id_efeito, nome : input.name, minimo : input.ranges.minimum, maximo : input.ranges.maximum, valor_padrao : input.ranges.default};
+            data.nome = data.nome.replace(new RegExp("'", 'g'), "''").replace("\n", "");
+            parametros.push(data);
+
+        }
 
         return parametros;
     }
@@ -108,17 +112,6 @@ class Categorias {
 
 class Empresas {
     constructor(data) {
-        /*
-        this.empresas = [
-            {nome: 'GUITARIX',         site: 'http://guitarix.org/'},
-            {nome: 'CALF', site: 'http://calf-studio-gear.org/'},
-            {nome: 'MOD',      site: 'http://moddevices.com/'},
-            {nome: 'TAP',              site: 'http://tap-plugins.sourceforge.net/'},
-            {nome: 'CAPS',             site: 'http://quitte.de/dsp/caps.html'},
-            {nome: 'ARTYFX',           site: 'http://openavproductions.com/artyfx/'}
-        ];
-        */
-
         this.empresas = [];
 
         for (let effect of data) {
@@ -179,20 +172,38 @@ class Print {
         data += this.categorias.print();
         data += '\n';
 
-        data += this.effectHeader();
+        data += this.printData(this.effectHeader, effect => this.effect(effect));
+        data += this.printDataTipo2(this.categoryHeader, effect => this.category(effect));
+
+        this.id_parametro = 1;
+        data += this.printDataTipo2(this.parametrosCabecalho, effect => this.parametros(effect));
+
+        return data;
+    }
+
+    printData(header, content) {
+        let data = header();
+
         for (let efeito of this.efeitos)
-            data += "           " + this.effect(efeito) + ",\n";
+            data += `           ${content(efeito)},\n`;
+
         data  = this.replaceAt(data, data.length-2, ";");
         data += '\n';
 
-        data += this.categoryHeader();
+        return data;
+    }
+
+    printDataTipo2(header, content) {
+        let data = header();
+
         for (let efeito of this.efeitos)
-            for (let categoria of this.category(efeito))
-                data += "           " + categoria + ",\n";
+            for (let value of content(efeito))
+                data += `           ${value},\n`;
+
         data  = this.replaceAt(data, data.length-2, ";");
         data += '\n';
 
-        console.log(data);
+        return data;
     }
 
     replaceAt(str, index, character) {
@@ -226,8 +237,26 @@ class Print {
 
         return data;
     }
+
+    parametrosCabecalho(effect) {
+        let data = "";
+        data += ` INSERT INTO efeito.parametro (id_parametro, id_efeito, nome, minimo, maximo, valor_padrao) \n`;
+        data += `      VALUES \n`;
+
+        return data;
+    }
+
+    parametros(efeito) {
+        let data = [];
+        for (let parametro of efeito.parametros)
+            data.push(`(${this.id_parametro++}, ${parametro.id_efeito}, '${parametro.nome}', ${parametro.minimo}, ${parametro.maximo}, ${parametro.valor_padrao})`);
+
+        return data;
+    }
 }
 
 
 
-new Print(effects).print();
+console.log(new Print(effects).print());
+//new Print(effects).print();
+//console.log(effects[0].ports.control.input);

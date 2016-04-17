@@ -217,28 +217,27 @@ ALTER TABLE instancia.configuracao_efeito_parametro ADD FOREIGN KEY (id_parametr
 -------------------------------------------------------------------------------------
 -- Visões
 -------------------------------------------------------------------------------------
-CREATE VIEW efeito.descricao_efeito AS
-SELECT id_efeito, efeito.nome, efeito.identificador, efeito.descricao, empresa.nome AS empresa, tecnologia.nome AS tecnologia
-  FROM efeito.efeito
-  JOIN efeito.empresa USING (id_empresa)
-  JOIN efeito.tecnologia USING (id_tecnologia);
+CREATE VIEW efeito.view_efeito_descricao AS
+	SELECT id_efeito, efeito.nome, efeito.identificador, efeito.descricao, empresa.nome AS empresa, tecnologia.nome AS tecnologia
+	  FROM efeito.efeito
+	  JOIN efeito.empresa USING (id_empresa)
+	  JOIN efeito.tecnologia USING (id_tecnologia);
 
-CREATE VIEW instancia.detalhes_patch AS
+CREATE VIEW instancia.view_patch_detalhes AS
+	SELECT id_patch, id_banco,
+	       instancia.banco.posicao || ' - ' || instancia.banco.nome || ': ' || instancia.patch.posicao || ' - ' || instancia.patch.nome AS patch_nome, 
+	       instancia.instancia_efeito.id_instancia_efeito,
+	       efeito.view_efeito_descricao.id_efeito, efeito.view_efeito_descricao.identificador AS efeito_identificador, 
+	       efeito.view_efeito_descricao.nome AS efeito_nome, 
+	       efeito.view_efeito_descricao.empresa, 
+	       efeito.view_efeito_descricao.tecnologia
 
-SELECT id_patch, id_banco,
-       instancia.banco.posicao || ' - ' || instancia.banco.nome || ': ' || instancia.patch.posicao || ' - ' || instancia.patch.nome AS patch_nome, 
-       instancia.instancia_efeito.id_instancia_efeito,
-       efeito.descricao_efeito.id_efeito, efeito.descricao_efeito.identificador AS efeito_identificador, 
-       efeito.descricao_efeito.nome AS efeito_nome, 
-       efeito.descricao_efeito.empresa, 
-       efeito.descricao_efeito.tecnologia
+	  FROM instancia.patch
+	  JOIN instancia.instancia_efeito USING (id_patch)
+	  JOIN instancia.banco USING (id_banco)
+	  JOIN efeito.view_efeito_descricao USING (id_efeito)
 
-  FROM instancia.patch
-  JOIN instancia.instancia_efeito USING (id_patch)
-  JOIN instancia.banco USING (id_banco)
-  JOIN efeito.descricao_efeito USING (id_efeito)
-
-ORDER BY banco.posicao, patch.posicao, id_instancia_efeito;
+	ORDER BY banco.posicao, patch.posicao, id_instancia_efeito;
 
 ------------------------------------------
 -- Dados de exemplo
@@ -249,7 +248,16 @@ VALUES (1, 'TAP Reflector', 'http://tap-plugins.sourceforge.net/ladspa/reflector
        (2, 'Auto Filter', 'http://quitte.de/dsp/caps.html#AutoFilter', 5, 2);
 */
 
-SELECT * FROM efeito.descricao_efeito
+SELECT * FROM efeito.view_efeito_descricao
  ORDER BY empresa;
 
-SELECT * FROM instancia.detalhes_patch;
+SELECT * FROM instancia.view_patch_detalhes;
+
+
+SELECT view_efeito_descricao.id_efeito, view_efeito_descricao.nome, view_efeito_descricao.empresa, 
+       efeito.parametro.*, view_efeito_descricao.tecnologia AS efeito_tecnologia
+
+  FROM efeito.view_efeito_descricao
+  JOIN efeito.parametro USING (id_efeito)
+
+ WHERE id_efeito = 100;

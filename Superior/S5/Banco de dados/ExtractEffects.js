@@ -50,7 +50,6 @@ class Efeito {
             let data = {id_efeito : id_efeito, nome : input.name, minimo : input.ranges.minimum, maximo : input.ranges.maximum, valor_padrao : input.ranges.default};
             data.nome = data.nome.replace(new RegExp("'", 'g'), "''").replace("\n", "");
             parametros.push(data);
-
         }
 
         return parametros;
@@ -257,6 +256,41 @@ class Print {
 
 
 
-console.log(new Print(effects).print());
+//console.log(new Print(effects).print());
 //new Print(effects).print();
-//console.log(effects[0].ports.control.input);
+let units = {};
+
+for (let efeito of effects) {
+    for (let input of efeito.ports.control.input) {
+        if (input.units.label == undefined)
+            continue;
+
+        units[input.units.label] = input.units;
+    }
+}
+
+console.log(units);
+
+let properties = [];
+
+for (let efeito of effects) {
+    for (let input of efeito.ports.control.input) {
+        for (let propertie of input.properties)
+            if (properties.indexOf(propertie) == -1)
+                properties.push(propertie)
+    }
+}
+
+console.log(properties);
+/*
+for (let efeito of effects) {
+    for (let input of efeito.ports.control.input) {
+        if (input.scalePoints.length > 0) {
+            console.log(input);
+            console.log(input.scalePoints);
+            break;
+        }
+    }
+}
+*/
+//console.log(effects[57].ports.control.input);

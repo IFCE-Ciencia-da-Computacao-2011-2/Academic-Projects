@@ -2,7 +2,7 @@
 
 //let effects = require("./plugins-old.json");
 let effects = require("./plugins.json");
-
+console.log(effects[57]);
 
 class Efeito {
     constructor(data, categorias, empresas) {
@@ -20,8 +20,8 @@ class Efeito {
 
         efeito.id = id;
     	efeito.nome = effect.name;
-        efeito.descricao = effect.comment.replace(new RegExp("'", 'g'), "''").replace("\n", "");
-    	efeito.identificador = effect.uri;
+        efeito.descricao = effect.description.replace(new RegExp("'", 'g'), "''").replace("\n", "");
+    	efeito.identificador = effect.url;
     	efeito.id_tecnologia = 1;//"lv2";
 
         efeito.empresa = this.empresa(effect);
@@ -53,22 +53,16 @@ class Efeito {
     }
 
     categoriasEfeitos(id_efeito, category) {
-        let idCategorias = []
         let categorias = [];
 
-        for (let categoria of category) {
-            let idCategoria = this.categorias.indexOf(categoria);
-            if (idCategorias.indexOf(idCategoria) == -1) {
-                categorias.push({ id_categoria : this.categorias.indexOf(categoria), id_efeito : id_efeito});
-                idCategorias.push(idCategoria);
-            }
-        }
+        for (let categoria of category)
+            categorias.push({ id_categoria : this.categorias.indexOf(categoria), id_efeito : id_efeito});
 
         return categorias;
     }
 
     empresa(effect) {
-        return this.empresas.indexOf(effect.brand);
+        return this.empresas.indexOf(effect.gui.templateData.author);
     }
 }
 
@@ -108,7 +102,6 @@ class Categorias {
 
 class Empresas {
     constructor(data) {
-        /*
         this.empresas = [
             {nome: 'GUITARIX',         site: 'http://guitarix.org/'},
             {nome: 'CALF', site: 'http://calf-studio-gear.org/'},
@@ -117,15 +110,25 @@ class Empresas {
             {nome: 'CAPS',             site: 'http://quitte.de/dsp/caps.html'},
             {nome: 'ARTYFX',           site: 'http://openavproductions.com/artyfx/'}
         ];
-        */
 
+        /*
         this.empresas = [];
 
         for (let effect of data) {
-            let empresa = {nome: effect.brand, site: effect.author.homepage};
-            if (this.indexOf(empresa.nome) == -1)
+            if (effect.developer == null || effect.gui.templateData == null)
+                continue;
+
+            let empresa = {nome: effect.gui.templateData.author, site: effect.developer.homepage};
+            if (this.indexOf(empresa) == -1)
                 this.empresas.push(empresa);
         }
+
+        let nomes = [];
+        for (let empresa of this.empresas) {
+            if (nomes.indexOf(empresa.nome) == -1)
+                nomes.push(empresa.nome);
+        }
+        */
     }
 
     indexOf(nome) {
@@ -166,6 +169,9 @@ class Print {
         let i = -1;
         for (let effect of effects) {
             i++;
+            if (effect.developer == null || effect.gui.templateData == null)
+                continue;
+
             this.efeitos.push(new Efeito(effects[i], this.categorias, this.empresas).prepare(i+1));
         }
     }

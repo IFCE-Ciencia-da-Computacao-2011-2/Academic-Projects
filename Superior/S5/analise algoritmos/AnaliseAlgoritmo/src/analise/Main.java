@@ -69,11 +69,9 @@ public class Main {
 		Util.reverse(copia2);
 		analises.add(analisarOrdenadores("Ordenado decrescente", TOTAL_TESTES, copia2, ordenadores));
 		
-		
 		System.out.println(" - Repetidos");
-		int[] copia3 = Util.copy(elementos);
-		Util.reverse(copia3);
-		analises.add(analisarOrdenadores("Repetidos", TOTAL_TESTES, copia2, ordenadores));
+		int[] tudoIgual = Util.tudoIgual(elementos.length, 50);
+		analises.add(analisarOrdenadores("Repetidos", TOTAL_TESTES, tudoIgual, ordenadores));
 		
 		return analises;
 	}

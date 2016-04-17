@@ -48,3 +48,12 @@ Resume of all simple academic works
  - **Projects:**
    * Raizes de funções
    * [Matemática](https://github.com/SrMouraSilva/Matematica)
+* **S5 - Análise de algoritmo**
+ - **Language:** Java
+ - **Projects:**
+   * Análise de algoritmos de ordenação (BubbleSort.java, CountingSort.java, HeapSort.java, InsertionSort.java, MergeSort.java, Nativo.java, NativoParallel.java, QuickSort.java)
+   * Grafos: Busca em largura, busca em profundidade, Dijkstra
+* **S5 - Banco de dados (Database)**
+ - **Language:** Javascript (node) + SQL
+ - **Projects:**
+   * Trabalho final: Pedal Pi - Effects

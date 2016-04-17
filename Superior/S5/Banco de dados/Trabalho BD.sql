@@ -218,7 +218,7 @@ ALTER TABLE instancia.configuracao_efeito_parametro ADD FOREIGN KEY (id_parametr
 -- Visões
 -------------------------------------------------------------------------------------
 CREATE VIEW efeito.descricao_efeito AS
-SELECT id_efeito, efeito.nome, efeito.identificador, empresa.nome AS empresa, tecnologia.nome AS tecnologia
+SELECT id_efeito, efeito.nome, efeito.identificador, efeito.descricao, empresa.nome AS empresa, tecnologia.nome AS tecnologia
   FROM efeito.efeito
   JOIN efeito.empresa USING (id_empresa)
   JOIN efeito.tecnologia USING (id_tecnologia);
@@ -249,6 +249,7 @@ VALUES (1, 'TAP Reflector', 'http://tap-plugins.sourceforge.net/ladspa/reflector
        (2, 'Auto Filter', 'http://quitte.de/dsp/caps.html#AutoFilter', 5, 2);
 */
 
-SELECT * FROM efeito.descricao_efeito;
+SELECT * FROM efeito.descricao_efeito
+ ORDER BY empresa;
 
 SELECT * FROM instancia.detalhes_patch;

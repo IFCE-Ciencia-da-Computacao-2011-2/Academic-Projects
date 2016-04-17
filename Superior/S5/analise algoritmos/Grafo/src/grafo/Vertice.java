@@ -2,32 +2,49 @@ package grafo;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Vertice implements Iterable<Vertice> {
 	private String nome;
-	private LinkedList<Vertice> adjacentes;
+	private List<Aresta> arestas;
 
 	public Vertice(String nome) {
 		this.nome = nome;
-		this.adjacentes = new LinkedList<Vertice>();
+		this.arestas = new LinkedList<Aresta>();
 	}
 
-	public void conectar(Vertice grafo) {
-		this.adjacentes.add(grafo);
-		if (grafo != this)
-			grafo.adjacentes.add(this);
-	}
-	
-	public LinkedList<Vertice> getGrafosConectados() {
-		return adjacentes;
-	}
-	
-	public LinkedList<Aresta> getArestas() {
-		LinkedList<Aresta> arestas = new LinkedList<>();
-		for (Vertice grafo : adjacentes)
-			arestas.add(new Aresta(this, grafo));
+	public List<Vertice> getAdjacentes() {
+		List<Vertice> vertices = new LinkedList<>();
 
+		for (Aresta aresta : arestas) {
+			if (aresta.getOrigem() != this)
+				vertices.add(aresta.getOrigem());
+
+			else if (aresta.getDestino() != this)
+				vertices.add(aresta.getDestino());
+
+			// Ciclo para si próprio
+			else
+				vertices.add(this);
+		}
+
+		return vertices;
+	}
+
+	public void addAresta(Aresta aresta) {
+		this.arestas.add(aresta);
+	}
+
+	public List<Aresta> getArestas() {
 		return arestas;
+	}
+	
+	public Aresta getAresta(Vertice destino) {
+		for (Aresta aresta : arestas)
+			if (aresta.getOrigem().equals(this) && aresta.getDestino().equals(destino))
+				return aresta;
+
+		throw new RuntimeException("Aresta inexistente");
 	}
 	
 	@Override
@@ -37,6 +54,6 @@ public class Vertice implements Iterable<Vertice> {
 
 	@Override
 	public Iterator<Vertice> iterator() {
-		return adjacentes.iterator();
+		return getAdjacentes().iterator();
 	}
 }

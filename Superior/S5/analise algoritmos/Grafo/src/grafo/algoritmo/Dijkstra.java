@@ -1,115 +1,122 @@
 package grafo.algoritmo;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import grafo.Aresta;
+import grafo.Grafo;
+import grafo.Vertice;
+
+/**
+ * Baseado em:
+ * http://www.vogella.com/tutorials/JavaAlgorithmsDijkstra/article.html
+ */
 public class Dijkstra {
-	private final List<Vertex> nodes;
-	private final List<Edge> edges;
-	private Set<Vertex> settledNodes;
-	private Set<Vertex> unSettledNodes;
-	private Map<Vertex, Vertex> predecessors;
-	private Map<Vertex, Integer> distance;
+	private Grafo grafo;
 
-	public DijkstraAlgorithm(Graph graph) {
-		// create a copy of the array so that we can operate on this array
-		this.nodes = new ArrayList<Vertex>(graph.getVertexes());
-		this.edges = new ArrayList<Edge>(graph.getEdges());
+	private Set<Vertice> nosAnalizados;
+	private Set<Vertice> nosNaoAnalizados;
+
+	private Map<Vertice, Vertice> predecessores;
+	private Map<Vertice, Integer> distancias;
+
+	public Dijkstra(Grafo grafo) {
+		this.grafo = grafo;
 	}
 
-	public void execute(Vertex source) {
-		settledNodes = new HashSet<Vertex>();
-		unSettledNodes = new HashSet<Vertex>();
-		distance = new HashMap<Vertex, Integer>();
-		predecessors = new HashMap<Vertex, Vertex>();
-		distance.put(source, 0);
-		unSettledNodes.add(source);
-		while (unSettledNodes.size() > 0) {
-			Vertex node = getMinimum(unSettledNodes);
-			settledNodes.add(node);
-			unSettledNodes.remove(node);
-			findMinimalDistances(node);
+	public void execute(Vertice origem) {
+		nosAnalizados = new HashSet<Vertice>();
+		nosNaoAnalizados = new HashSet<Vertice>();
+
+		distancias = new HashMap<Vertice, Integer>();
+		predecessores = new HashMap<Vertice, Vertice>();
+
+		distancias.put(origem, 0);
+		nosNaoAnalizados.add(origem);
+
+		while (!nosNaoAnalizados.isEmpty()) {
+			Vertice vertice = getMinimoDos(nosNaoAnalizados);
+
+			nosAnalizados.add(vertice);
+			nosNaoAnalizados.remove(vertice);
+
+			buscarDistanciasMinimasDeAdjacentesDe(vertice);
 		}
 	}
 
-	private void findMinimalDistances(Vertex node) {
-		List<Vertex> adjacentNodes = getNeighbors(node);
-		for (Vertex target : adjacentNodes) {
-			if (getShortestDistance(target) > getShortestDistance(node)
-					+ getDistance(node, target)) {
-				distance.put(target, getShortestDistance(node)
-						+ getDistance(node, target));
-				predecessors.put(target, node);
-				unSettledNodes.add(target);
+	private Vertice getMinimoDos(Set<Vertice> vertices) {
+		Iterator<Vertice> iterator = vertices.iterator();
+
+		Vertice minimo = iterator.next();
+		
+		while (iterator.hasNext()) {
+			Vertice vertice = iterator.next();
+			if (getMenorDistanciaComputadaPara(vertice) < getMenorDistanciaComputadaPara(minimo))
+				minimo = vertice;
+		}
+
+		return minimo;
+	}
+
+	private void buscarDistanciasMinimasDeAdjacentesDe(Vertice no) {
+		List<Vertice> adjacentes = getAdjacentes(no);
+
+		for (Vertice destino : adjacentes) {
+			int distanciaParaAdjacente = getMenorDistanciaComputadaPara(no) + getDistancia(no, destino);
+
+			if (distanciaParaAdjacente < getMenorDistanciaComputadaPara(destino)) {
+				distancias.put(destino, distanciaParaAdjacente);
+				predecessores.put(destino, no);
+				nosNaoAnalizados.add(destino); // Se getMenorDistanciaComputadaPara < distanciaParaAdjacente, adjacente já computado
 			}
 		}
-
 	}
 
-	private int getDistance(Vertex node, Vertex target) {
-		for (Edge edge : edges) {
-			if (edge.getSource().equals(node)
-					&& edge.getDestination().equals(target)) {
-				return edge.getWeight();
-			}
+	private List<Vertice> getAdjacentes(Vertice no) {
+		List<Vertice> vizinhos = new ArrayList<Vertice>();
+		for (Aresta aresta : no.getArestas())
+			if (aresta.getOrigem().equals(no) && !isAnalisado(aresta.getDestino()))
+				vizinhos.add(aresta.getDestino());
+
+		return vizinhos;
+	}
+
+	private boolean isAnalisado(Vertice Vertice) {
+		return nosAnalizados.contains(Vertice);
+	}
+
+	private int getDistancia(Vertice origem, Vertice destino) {
+		return origem.getAresta(destino).getPeso();
+	}
+
+
+	private int getMenorDistanciaComputadaPara(Vertice destino) {
+		Integer distancia = distancias.get(destino);
+
+		return distancia == null ? Integer.MAX_VALUE : distancia;
+	}
+
+	public List<Aresta> getCaminho(Vertice destino) {
+		List<Aresta> caminho = new LinkedList<Aresta>();
+		Vertice vertice = destino;
+
+		if (predecessores.get(vertice) == null)
+			return caminho;
+
+		while (predecessores.get(vertice) != null) {
+			Vertice predecessor = predecessores.get(vertice);
+			caminho.add(grafo.getAresta(predecessor, vertice));
+			vertice = predecessor;
 		}
-		throw new RuntimeException("Should not happen");
-	}
 
-	private List<Vertex> getNeighbors(Vertex node) {
-		List<Vertex> neighbors = new ArrayList<Vertex>();
-		for (Edge edge : edges) {
-			if (edge.getSource().equals(node)
-					&& !isSettled(edge.getDestination())) {
-				neighbors.add(edge.getDestination());
-			}
-		}
-		return neighbors;
+		Collections.reverse(caminho);
+		return caminho;
 	}
-
-	private Vertex getMinimum(Set<Vertex> vertexes) {
-		Vertex minimum = null;
-		for (Vertex vertex : vertexes) {
-			if (minimum == null) {
-				minimum = vertex;
-			} else {
-				if (getShortestDistance(vertex) < getShortestDistance(minimum)) {
-					minimum = vertex;
-				}
-			}
-		}
-		return minimum;
-	}
-
-	private boolean isSettled(Vertex vertex) {
-		return settledNodes.contains(vertex);
-	}
-
-	private int getShortestDistance(Vertex destination) {
-		Integer d = distance.get(destination);
-		if (d == null) {
-			return Integer.MAX_VALUE;
-		} else {
-			return d;
-		}
-	}
-
-	/*
-	 * This method returns the path from the source to the selected target and
-	 * NULL if no path exists
-	 */
-	public LinkedList<Vertex> getPath(Vertex target) {
-		LinkedList<Vertex> path = new LinkedList<Vertex>();
-		Vertex step = target;
-		// check if a path exists
-		if (predecessors.get(step) == null) {
-			return null;
-		}
-		path.add(step);
-		while (predecessors.get(step) != null) {
-			step = predecessors.get(step);
-			path.add(step);
-		}
-		// Put it into the correct order
-		Collections.reverse(path);
-		return path;
-	}
-
 }

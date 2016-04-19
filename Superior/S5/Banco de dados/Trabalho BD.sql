@@ -178,7 +178,7 @@ CREATE TABLE instancia.banco (
 	nome VARCHAR(20),
 	posicao int CHECK (posicao >= 0),
 
-	UNIQUE (id_banco, posicao)
+	UNIQUE (posicao)
 );
 
 ------------------------------------------
@@ -227,8 +227,9 @@ CREATE VIEW instancia.view_patch_detalhes AS
 	SELECT id_patch, id_banco,
 	       instancia.banco.posicao || ' - ' || instancia.banco.nome || ': ' || instancia.patch.posicao || ' - ' || instancia.patch.nome AS patch_nome, 
 	       instancia.instancia_efeito.id_instancia_efeito,
-	       efeito.view_efeito_descricao.id_efeito, efeito.view_efeito_descricao.identificador AS efeito_identificador, 
+	       efeito.view_efeito_descricao.id_efeito,
 	       efeito.view_efeito_descricao.nome AS efeito_nome, 
+	       efeito.view_efeito_descricao.identificador AS efeito_identificador, 
 	       efeito.view_efeito_descricao.empresa, 
 	       efeito.view_efeito_descricao.tecnologia
 
@@ -242,18 +243,20 @@ CREATE VIEW instancia.view_patch_detalhes AS
 ------------------------------------------
 -- Dados de exemplo
 ------------------------------------------
-/*
-INSERT INTO efeito.efeito (id_efeito, nome, identificador, id_empresa, id_tecnologia)
-VALUES (1, 'TAP Reflector', 'http://tap-plugins.sourceforge.net/ladspa/reflector.html', 4, 2),
-       (2, 'Auto Filter', 'http://quitte.de/dsp/caps.html#AutoFilter', 5, 2);
-*/
 
+
+------------------------------------------
+-- Consultas de exemplo
+------------------------------------------
+-- View 1 - Efeitos
 SELECT * FROM efeito.view_efeito_descricao
  ORDER BY empresa;
 
+-- View 2 - Patchs
 SELECT * FROM instancia.view_patch_detalhes;
 
 
+-- Parametros de um efeito
 SELECT view_efeito_descricao.id_efeito, view_efeito_descricao.nome, view_efeito_descricao.empresa, 
        efeito.parametro.*, view_efeito_descricao.tecnologia AS efeito_tecnologia
 

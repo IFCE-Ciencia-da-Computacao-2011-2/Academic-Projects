@@ -176,6 +176,8 @@ class Print {
 
         this.id_parametro = 1;
         data += this.printDataTipo2(this.parametrosCabecalho, effect => this.parametros(effect));
+        this.id_plug = 1;
+        data += this.printDataTipo2(this.plugsCabecalho, effect => this.plugs(effect));
 
         return data;
     }
@@ -252,12 +254,29 @@ class Print {
 
         return data;
     }
+
+    plugsCabecalho() {
+        let data = "";
+        data += ` INSERT INTO efeito.plug (id_plug, id_efeito, id_tipo_plug, nome) \n`;
+        data += `      VALUES \n`;
+
+        return data;
+    }
+
+    plugs(efeito) {
+        let data = [];
+        for (let plug of efeito.plugs)
+            data.push(`(${this.id_plug++}, ${plug.id_efeito}, ${plug.tipo}, '${plug.nome}')`);
+
+        return data;
+    }
 }
 
 
 
-//console.log(new Print(effects).print());
+console.log(new Print(effects).print());
 //new Print(effects).print();
+/*
 let units = {};
 
 for (let efeito of effects) {
@@ -293,4 +312,3 @@ for (let efeito of effects) {
     }
 }
 */
-//console.log(effects[57].ports.control.input);

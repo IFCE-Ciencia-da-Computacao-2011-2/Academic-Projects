@@ -105,33 +105,12 @@ ALTER TABLE efeito.parametro ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeit
 -- Popular dados BASE
 ------------------------------------------
 -- Tecnologia e empresa do dispositivo
-/*
-INSERT INTO efeito.empresa (id_empresa, nome, site)
-VALUES (1, 'Guitarix', 'http://guitarix.org/'),
-       (2, 'Calf Studio Gear', 'http://calf-studio-gear.org/'),
-       (3, 'Mod Devices', 'http://moddevices.com/'),
-       (4, 'TAP', 'http://tap-plugins.sourceforge.net/'),
-       (5, 'CAPS', 'http://quitte.de/dsp/caps.html');
-*/
-
 INSERT INTO efeito.tecnologia (id_tecnologia, nome, descricao)
 VALUES (1, 'LV²', 'LV2 is an open standard for audio plugins, used by hundreds of plugins and other projects. At its core, LV2 is a simple stable interface, accompanied by extensions which add functionality to support the needs of increasingly powerful audio software'),
        (2, 'LADSPA', 'LADSPA is an acronym for Linux Audio Developer"s Simple Plugin Aefeito. It is an application programming interface (Aefeito) standard for handling audio filters and audio signal processing effects, licensed under the GNU Lesser General Public License (LGPL)'),
        (3, 'VST', 'Virtual Studio Technology (VST) is a software interface that integrates software audio synthesizer and effect plugins with audio editors and recording systems. VST and similar technologies use digital signal processing to simulate traditional recording studio hardware in software. Thousands of plugins exist, both commercial and freeware, and a large number of audio applications support VST under license from its creator, Steinberg.');
 
 -- Categorias de efeitos
-/*
-INSERT INTO efeito.categoria (id_categoria, nome)
-VALUES (1, 'DELAY'),
-       (2, 'DISTORTION'),
-       (3, 'DYNAMICS'),
-       (4, 'FILTER'),
-       (5, 'GENERATOR'),
-       (6, 'MODULATOR'),
-       (7, 'REVERB'),
-       (8, 'SIMULATOR'),
-       (9, 'SPECTRAL');
-*/
 
 -- Tipos de Plug
 INSERT INTO efeito.tipo_plug (id_tipo_plug, nome)
@@ -146,13 +125,14 @@ VALUES (1, 'Input'),
 ------------------------------------------
 CREATE TABLE instancia.conexao (
 	id_conexao int PRIMARY KEY,
-	
-	id_instancia_efeito_entrada int,
-	id_plug_entrada int,
+
 	id_instancia_efeito_saida int,
 	id_plug_saida int,
 
-	UNIQUE (id_instancia_efeito_entrada, id_plug_entrada, id_instancia_efeito_saida, id_plug_saida)
+	id_instancia_efeito_entrada int,
+	id_plug_entrada int,
+	
+	UNIQUE (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
 );
 
 ------------------------------------------

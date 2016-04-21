@@ -136,7 +136,7 @@ CREATE TABLE instancia.conexao (
 );
 
 ------------------------------------------
--- Instância, Patchs e bancos
+-- Instância, Patchs e Bancos
 ------------------------------------------
 CREATE TABLE instancia.instancia_efeito (
 	id_instancia_efeito int PRIMARY KEY,
@@ -219,6 +219,133 @@ CREATE VIEW instancia.view_patch_detalhes AS
 	  JOIN efeito.view_efeito_descricao USING (id_efeito)
 
 	ORDER BY banco.posicao, patch.posicao, id_instancia_efeito;
+
+-------------------------------------------------------------------------------------
+-- Triggers
+-------------------------------------------------------------------------------------
+-- Triggers para instancia.conexao
+CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger AS $$
+    BEGIN
+	-- Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se
+	IF NOT EXISTS(
+		SELECT *
+		  FROM instancia.instancia_efeito
+		  JOIN efeito.efeito USING (id_efeito)
+		  JOIN efeito.plug USING (id_efeito)
+
+		 WHERE id_instancia_efeito = NEW.id_instancia_efeito_saida
+		   AND id_plug = NEW.id_plug_saida
+	) THEN
+		RAISE EXCEPTION 'Plug de saída (id_plug_saida) % não pertence ao efeito no qual sua instância (instancia_efeito_saida) % pertence', NEW.id_plug_saida, NEW.id_instancia_efeito_saida;
+	END IF;
+
+	-- Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se
+	IF NOT EXISTS(
+		SELECT *
+		  FROM instancia.instancia_efeito
+		  JOIN efeito.efeito USING (id_efeito)
+		  JOIN efeito.plug USING (id_efeito)
+
+		 WHERE id_instancia_efeito = NEW.id_instancia_efeito_entrada
+		   AND id_plug = NEW.id_plug_entrada
+	) THEN
+		RAISE EXCEPTION 'Plug de entrada (id_plug_entrada) % não pertence ao efeito no qual sua instância (instancia_efeito_entrada) % pertence', NEW.id_plug_saida, NEW.id_instancia_efeito_saida;
+	END IF;
+
+	-- Plug de SAÍDA deve ser do tipo esperado (Output)
+	IF NOT EXISTS(
+		SELECT *
+		  FROM efeito.plug
+		 WHERE id_tipo_plug = 2 -- Output
+		   AND id_plug = NEW.id_plug_saida
+	) THEN
+		RAISE EXCEPTION 'Plug de saída (id_plug_saída) % não é do tipo esperado (id_tipo_plug = 2, Output)', NEW.id_plug_saida;
+	END IF;
+
+	-- Plug de ENTRADA deve ser do tipo esperado (Input)
+	IF NOT EXISTS(
+		SELECT *
+		  FROM efeito.plug
+		 WHERE id_tipo_plug = 1 -- Input
+		   AND id_plug = NEW.id_plug_entrada
+	) THEN
+		RAISE EXCEPTION 'Plug de entrada (id_plug_entrada) % não é do tipo esperado (id_tipo_plug = 1, Input)', NEW.id_plug_entrada;
+	END IF;
+
+        RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trigger_gerenciar_conexao
+AFTER INSERT OR UPDATE ON instancia.conexao
+   FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerenciar_conexao();
+
+-- Testes
+--  1. Plug saída não pertencente ao efeito de saída
+--INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+--     VALUES (10000, 1, 50, 2, 1);
+--  2. Plug entrada não pertencente ao efeito de entrada
+--INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+--     VALUES (10001, 1, 2, 2, 50);
+--  3. Plug de saída deve ser do tipo output
+--INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+--     VALUES (10002, 1, 1, 2, 1);
+--  4. Plug de saída deve ser do tipo input
+--INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+--     VALUES (10002, 1, 3, 2, 3);
+
+
+CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao_ciclos() RETURNS trigger AS $$
+    BEGIN
+	-- Não devem haver ciclos
+	IF EXISTS(
+		-- http://dba.stackexchange.com/questions/64663/pl-pgsql-fuction-to-find-circular-references
+		WITH RECURSIVE busca_ciclo(id_conexao, id_instancia_efeito_saida, id_instancia_efeito_entrada, profundidade, caminho, ciclo) AS (
+			SELECT saida.id_conexao,
+			       saida.id_instancia_efeito_saida,
+			       saida.id_instancia_efeito_entrada,
+			       1 AS profundidade,
+			       ARRAY[saida.id_instancia_efeito_saida, saida.id_instancia_efeito_entrada] AS caminho,
+			       false AS ciclo
+
+			  FROM instancia.conexao saida
+			 WHERE id_conexao = NEW.id_conexao
+
+		      UNION ALL
+
+			SELECT entrada.id_conexao,
+			       entrada.id_instancia_efeito_saida,
+			       entrada.id_instancia_efeito_entrada,
+			       saida.profundidade + 1,
+			       caminho || entrada.id_instancia_efeito_entrada,
+			       entrada.id_instancia_efeito_entrada = ANY(caminho)
+
+			  FROM instancia.conexao entrada, busca_ciclo saida
+			 WHERE saida.id_instancia_efeito_entrada = entrada.id_instancia_efeito_saida AND NOT ciclo
+		)
+
+		SELECT * FROM busca_ciclo where ciclo IS TRUE
+	) THEN
+		RAISE EXCEPTION 'Ciclo de instancia_efeito''s detectado!';
+	END IF;
+
+        RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_gerenciar_conexao_ciclos
+AFTER INSERT OR UPDATE ON instancia.conexao
+   FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerenciar_conexao_ciclos();
+
+-- 1. Não devem haver ciclos
+-- START -> A -> B -> C -> END
+-- START -> A -> B -> D -> A -- CICLO!
+--INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+--     VALUES (10000, 1, 3, 2,  1),
+--            (10001, 2, 3, 3,  5),
+--            (10002, 3, 6, 4, 64),
+--            (10003, 3, 6, 1,  1); -- Loop
 
 ------------------------------------------
 -- Dados de exemplo

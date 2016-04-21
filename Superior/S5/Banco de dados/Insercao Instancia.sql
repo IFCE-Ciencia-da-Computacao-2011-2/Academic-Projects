@@ -1,7 +1,4 @@
-﻿
-SELECT * FROM instancia.view_patch_detalhes;
-
-INSERT INTO instancia.banco (id_banco, nome, posicao)
+﻿INSERT INTO instancia.banco (id_banco, nome, posicao)
      VALUES (1, 'Shows', 0),
             (2, 'Experience', 1);
 
@@ -21,23 +18,37 @@ INSERT INTO instancia.instancia_efeito (id_instancia_efeito, id_efeito, id_patch
 
 INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
      VALUES (1, 1, 3, 2,  1),
-            (3, 2, 3, 3,  5),
-            (4, 3, 6, 4, 64); -- Efeito equalizador não utilizado
+            (2, 2, 3, 3,  5),
+            (3, 3, 6, 4, 64); -- Efeito equalizador não utilizado
 
--- Portas de um patch
+
+-- Detalhes do patch
+SELECT * FROM instancia.view_patch_detalhes;
+
+-- Plugs de um patch
 SELECT id_instancia_efeito, efeito_nome, id_plug, id_tipo_plug, nome AS plug_nome
   FROM instancia.view_patch_detalhes
   JOIN efeito.plug USING (id_efeito)
   ORDER BY id_efeito, id_instancia_efeito, efeito_nome, plug.nome;
 
 -- Arestas do grafo portas
-SELECT * --efeito_nome || ': ' || plug.nome AS origem, efeito_nome || ': ' || plug.nome AS destino
-  FROM instancia.conexao
-  JOIN instancia.view_patch_detalhes ON (
-	   id_instancia_efeito_saida = id_instancia_efeito
-	OR id_instancia_efeito_entrada = id_instancia_efeito
-  )
-  JOIN efeito.plug ON (
-	   id_plug_saida = id_plug
-	OR id_plug_entrada = id_plug
-  )
+SELECT efeito_saida.id_patch,
+       conexao.id_conexao,
+       conexao.id_instancia_efeito_saida,
+       efeito_saida.efeito_nome || ': ' || plug_saida.nome AS origem,
+       conexao.id_instancia_efeito_entrada,
+       efeito_entrada.efeito_nome || ': ' || plug_entrada.nome AS destino,
+       conexao.id_instancia_efeito_saida || '.' || plug_saida.id_plug || ' -> ' || conexao.id_instancia_efeito_entrada || '.' || plug_entrada.id_plug AS resumo
+
+  FROM instancia.conexao,
+       instancia.view_patch_detalhes AS efeito_saida,
+       instancia.view_patch_detalhes AS efeito_entrada,
+       efeito.plug AS plug_saida,
+       efeito.plug AS plug_entrada
+
+ WHERE id_instancia_efeito_saida   = efeito_saida.id_instancia_efeito
+   AND id_instancia_efeito_entrada = efeito_entrada.id_instancia_efeito
+   AND id_plug_saida   = plug_saida.id_plug
+   AND id_plug_entrada = plug_entrada.id_plug
+
+ ORDER BY id_conexao;

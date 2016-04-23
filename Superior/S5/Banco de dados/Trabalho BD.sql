@@ -63,14 +63,14 @@ CREATE TABLE efeito.categoria_efeito (
 ------------------------------------------
 CREATE TABLE efeito.plug (
 	id_plug int PRIMARY KEY,
-	id_efeito int,
-	id_tipo_plug int,
-	nome varchar(50)
+	id_efeito int NOT NULL,
+	id_tipo_plug int NOT NULL,
+	nome varchar(50) NOT NULL
 );
 
 CREATE TABLE efeito.tipo_plug (
 	id_tipo_plug int PRIMARY KEY,
-	nome varchar(50) UNIQUE
+	nome varchar(50) NOT NULL UNIQUE
 );
 
 ------------------------------------------
@@ -78,12 +78,19 @@ CREATE TABLE efeito.tipo_plug (
 ------------------------------------------
 CREATE TABLE efeito.parametro (
 	id_parametro int PRIMARY KEY,
-	id_efeito int,	
-	nome varchar(50),
+	id_efeito int NOT NULL,	
+	nome varchar(50) NOT NULL,
 
-	minimo float,
-	maximo float,
-	valor_padrao int
+	minimo float NOT NULL CHECK (minimo <= maximo),
+	maximo float NOT NULL CHECK (maximo >= minimo),
+	valor_padrao float NOT NULL CHECK(
+		valor_padrao BETWEEN minimo AND maximo
+	)
+	/*
+	SELECT efeito.nome, parametro.nome, minimo, maximo, valor_padrao
+	  FROM efeito.parametro JOIN efeito.efeito USING (id_efeito)
+	 WHERE maximo < valor_padrao
+	*/
 );
 
 ------------------------------------------
@@ -126,11 +133,11 @@ VALUES (1, 'Input'),
 CREATE TABLE instancia.conexao (
 	id_conexao int PRIMARY KEY,
 
-	id_instancia_efeito_saida int,
-	id_plug_saida int,
+	id_instancia_efeito_saida int NOT NULL,
+	id_plug_saida int NOT NULL,
 
-	id_instancia_efeito_entrada int,
-	id_plug_entrada int,
+	id_instancia_efeito_entrada int NOT NULL,
+	id_plug_entrada int NOT NULL,
 	
 	UNIQUE (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
 );
@@ -140,23 +147,23 @@ CREATE TABLE instancia.conexao (
 ------------------------------------------
 CREATE TABLE instancia.instancia_efeito (
 	id_instancia_efeito int PRIMARY KEY,
-	id_efeito int,
-	id_patch int
+	id_efeito int NOT NULL,
+	id_patch int NOT NULL
 );
 
 CREATE TABLE instancia.patch (
 	id_patch int PRIMARY KEY,
-	id_banco int,
-	nome VARCHAR(20),
-	posicao int CHECK (posicao >= 0),
+	id_banco int NOT NULL,
+	nome VARCHAR(20) NOT NULL,
+	posicao int CHECK (posicao >= 0) NOT NULL,
 
 	UNIQUE (id_banco, posicao)
 );
 
 CREATE TABLE instancia.banco (
 	id_banco int PRIMARY KEY,
-	nome VARCHAR(20),
-	posicao int CHECK (posicao >= 0),
+	nome VARCHAR(20) NOT NULL,
+	posicao int CHECK (posicao >= 0) NOT NULL,
 
 	UNIQUE (posicao)
 );
@@ -166,9 +173,9 @@ CREATE TABLE instancia.banco (
 ------------------------------------------
 CREATE TABLE instancia.configuracao_efeito_parametro (
 	id_configuracao_efeito_parametro int PRIMARY KEY,
-	id_instancia_efeito int,
-	id_parametro int,
-	valor float,
+	id_instancia_efeito int NOT NULL,
+	id_parametro int NOT NULL,
+	valor float NOT NULL,
 
 	UNIQUE (id_instancia_efeito, id_parametro)
 );
@@ -191,8 +198,10 @@ ALTER TABLE instancia.configuracao_efeito_parametro ADD FOREIGN KEY (id_instanci
 ALTER TABLE instancia.configuracao_efeito_parametro ADD FOREIGN KEY (id_parametro) REFERENCES efeito.parametro (id_parametro);
 
 ------------------------------------------
--- Popular dados BASE
+-- SEQUENCES
 ------------------------------------------
+
+CREATE SEQUENCE instancia.sequence_configuracao_efeito_parametro START 1;
 
 -------------------------------------------------------------------------------------
 -- Visões
@@ -347,6 +356,77 @@ AFTER INSERT OR UPDATE ON instancia.conexao
 --            (10002, 3, 6, 4, 64),
 --            (10003, 3, 6, 1,  1); -- Loop
 
+-- Triggers para instancia.instancia_efeito
+-- Descrição: Para uma instancia_efeito criada, serão gerados configuracao_efeito_parametro
+--            para cada parâmetro do efeito da instância.
+--            O valor será o efeito.parametro.valor_padrao
+CREATE OR REPLACE FUNCTION instancia.funcao_gerar_configuracao_efeito_parametro() RETURNS trigger AS $$
+    BEGIN
+	INSERT INTO instancia.configuracao_efeito_parametro
+
+	SELECT nextval('instancia.sequence_configuracao_efeito_parametro') AS id_configuracao_efeito_parametro, NEW.id_instancia_efeito, id_parametro, valor_padrao AS valor
+	  FROM efeito.parametro
+	 WHERE id_efeito = NEW.id_efeito;
+
+        RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER funcao_gerar_configuracao_efeito_parametro
+AFTER INSERT ON instancia.instancia_efeito
+   FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerar_configuracao_efeito_parametro();
+
+-- Detalhes dos valores dos parâmetros dos efeitos de um patch
+/*
+SELECT id_patch || ' - ' || patch.nome AS patch, id_efeito, id_instancia_efeito, id_parametro, efeito.nome || ': ' || parametro.nome AS parametro, configuracao_efeito_parametro.valor AS valor_atual, valor_padrao || ' [' ||minimo || ', ' || maximo || ']' AS valor_padrao
+  FROM instancia.patch
+  JOIN instancia.instancia_efeito USING (id_patch)
+  JOIN efeito.efeito USING (id_efeito)
+  JOIN efeito.parametro USING (id_efeito)
+  JOIN instancia.configuracao_efeito_parametro USING (id_instancia_efeito, id_parametro)
+
+ WHERE id_patch = 1
+
+ ORDER BY id_patch, id_efeito, id_instancia_efeito, id_parametro
+*/
+
+-- Valor de um parâmetro (instancia.configuracao_efeito_parametro.valor) deve estar entre
+-- o mínimo e o máximo do parâmetro correspondente ([efeito.parametro.minimo, efeito.parametro.maximo])
+CREATE OR REPLACE FUNCTION instancia.funcao_atualizar_valor_instancia_efeito_parametro() RETURNS trigger AS $$
+    BEGIN
+	IF EXISTS(
+		SELECT * FROM efeito.parametro
+		 WHERE id_parametro = NEW.id_parametro
+		   AND NEW.valor NOT BETWEEN minimo AND maximo
+	) THEN
+		RAISE EXCEPTION 'instancia.configuracao_efeito_parametro deve ter seu valor pertencente ao intervalo [%, %]',
+		                minimo FROM efeito.parametro WHERE id_parametro = NEW.id_parametro,
+		                maximo FROM efeito.parametro WHERE id_parametro = NEW.id_parametro;
+	END IF;
+
+	RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER funcao_atualizar_valor_instancia_efeito_parametro
+AFTER UPDATE ON instancia.configuracao_efeito_parametro
+   FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_atualizar_valor_instancia_efeito_parametro();
+
+-- Menor
+/*
+UPDATE instancia.configuracao_efeito_parametro
+ SET valor = -5000
+  WHERE id_configuracao_efeito_parametro = 1;
+*/
+
+-- Maior
+/*
+UPDATE instancia.configuracao_efeito_parametro
+ SET valor = 5000
+  WHERE id_configuracao_efeito_parametro = 1;
+*/
+
 ------------------------------------------
 -- Dados de exemplo
 ------------------------------------------
@@ -371,3 +451,4 @@ SELECT view_efeito_descricao.id_efeito, view_efeito_descricao.nome, view_efeito_
   JOIN efeito.parametro USING (id_efeito)
 
  WHERE id_efeito = 100;
+

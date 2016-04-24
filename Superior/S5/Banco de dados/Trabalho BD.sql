@@ -4,6 +4,91 @@ CREATE SCHEMA efeito;
 DROP SCHEMA IF EXISTS instancia CASCADE;
 CREATE SCHEMA instancia;
 
+DROP SCHEMA IF EXISTS dicionario_dados CASCADE;
+CREATE SCHEMA dicionario_dados;
+
+-------------------------------------------------------------------------------------
+-- Esquema dicionario_dados
+-------------------------------------------------------------------------------------
+-- Material de apoio sobre catálogo do Postgres: http://www.inf.puc-rio.br/~postgresql/conteudo/publicationsfiles/monteiro-reltec-metadados.PDF
+
+-- http://dba.stackexchange.com/questions/30061/how-do-i-list-all-tables-in-all-schemas-owned-by-the-current-user-in-postgresql
+DROP view IF EXISTS dicionario_dados.relacao;
+
+CREATE OR REPLACE VIEW dicionario_dados.relacao AS
+	SELECT pg_namespace.nspname AS namespace,
+	       RelName as tabela,
+	       pg_catalog.obj_description(pg_class.oid, 'pg_class') AS comentario,
+	       
+	       case pg_class.relkind
+		 when 'r' then 'TABLE'
+		 when 'i' then 'INDEX'
+		 when 'S' then 'SEQUENCE'
+		 when 'v' then 'VIEW'
+		 when 'c' then 'TYPE'
+		 else pg_class.relkind::text
+	       end as tipo/**/
+
+	 FROM pg_class
+	 JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+
+	 WHERE pg_class.relkind NOT IN ('i', 'S')
+	   AND pg_namespace.nspname IN ('efeito', 'instancia')
+
+	   ORDER BY namespace, tipo;
+
+DROP view IF EXISTS dicionario_dados.atributo;
+
+
+CREATE OR REPLACE VIEW dicionario_dados.atributo AS
+
+-- http://blog.delogic.com.br/criar-dicionario-de-dados-em-postgres/
+SELECT nsp.nspname AS Namespace,
+       tbl.relname AS Tabela,
+       atr.attname AS Coluna,
+       pg_catalog.format_type(atr.atttypid,atr.atttypmod) AS Tipo,
+
+       CASE WHEN (atr.atttypmod > 0)
+            THEN atr.atttypmod-4 END AS Tamanho,
+       CASE WHEN atr.attnotnull = 't'
+            THEN 'Sim' ELSE '-' END AS Obrigatorio,
+
+	coalesce(
+		(select 'Sim' || ''
+		   from pg_constraint ct
+		  where ct.contype = 'p'
+		    and ct.conrelid = tbl.oid
+		    AND atr.attnum = ANY (ct.conkey)),
+		 '-')
+	AS Chave_Primaria,
+	coalesce(
+		(select 'Ref: ' || nsp.nspname || '.' || g.relname
+		   from pg_class g
+		  inner join pg_constraint ct on g.oid = ct.confrelid
+		  where ct.conrelid = tbl.oid
+		    AND atr.attnum = ANY (ct.conkey)), '-')
+	as Chave_Estrangeira,
+
+    coalesce(
+        (select 'Sim' || ''
+           from pg_constraint ct
+          where ct.contype = 'u'
+            and ct.conrelid = tbl.oid
+            AND atr.attnum = ANY (ct.conkey)), '-')
+    AS Valor_Unico,
+
+    pg_catalog.col_description(atr.attrelid, atr.attnum) AS comentario
+
+  FROM pg_attribute atr
+
+ INNER JOIN pg_class tbl ON tbl.oid = atr.attrelid
+  LEFT JOIN pg_attrdef atrdef ON atrdef.adrelid = tbl.oid AND atrdef.adnum = atr.attnum
+  LEFT JOIN pg_namespace nsp ON nsp.oid = tbl.relnamespace
+ WHERE tbl.relkind = 'r'::char
+   AND nsp.nspname IN ('efeito', 'instancia')
+   AND atr.attnum > 0
+ order by namespace, Tabela, atr.attnum /* Número da coluna*/, Coluna, Chave_Primaria desc, Chave_Estrangeira desc;
+
 -------------------------------------------------------------------------------------
 -- Esquema efeito
 -------------------------------------------------------------------------------------
@@ -25,14 +110,34 @@ CREATE TABLE efeito.efeito (
 	id_tecnologia int NOT NULL
 );
 
+COMMENT ON TABLE efeito.efeito IS 'Efeitos são plugins que simulam "pedais" (de guitarra, de baixo...), "amplificadores", "sintetizadores" - dentre outros equipamentos - 
+cujo intuito é melhorar (corrigir), modificar e (ou) incrementar o áudio obtido externamente (por uma interface de áudio) ou internamente (por um efeito anterior).\n
+O produto (áudio processado) poderá ser utilizado externamente (sendo disposto em uma interface de áudio) ou internamente (por um efeito posterior ou gravação de áudio)\n\n
+
+ - Para conexões entre efeitos, visite instancia.conexao\n
+ - Para representação de interface de áudio, visite efeito.';
+
+COMMENT ON COLUMN efeito.efeito.id_efeito IS 'Chave primária de efeito';
+COMMENT ON COLUMN efeito.efeito.nome IS 'Nome do efeito';
+COMMENT ON COLUMN efeito.efeito.descricao IS 'Descrição do efeito provindas da empresa que o desenvolveu';
+COMMENT ON COLUMN efeito.efeito.identificador IS 'Identificador único em forma de URI - Identificador Uniforme de Recurso';
+COMMENT ON COLUMN efeito.efeito.id_empresa IS 'Referência para chave primária da empresa que desenvolveu o efeito';
+COMMENT ON COLUMN efeito.efeito.id_tecnologia IS 'Referência para chave primária da tecnologia utilizada do efeito';
+
 ------------------------------------------
 -- Tecnologia e empresa do dispositivo
 ------------------------------------------
 CREATE TABLE efeito.empresa (
-	id_empresa int PRIMARY KEY, -- Empresas podem ser de qualquer lugar do mundo
+	id_empresa int PRIMARY KEY,
 	nome varchar(50) NOT NULL,
 	site efeito.Site NOT NULL
 );
+
+COMMENT ON TABLE efeito.empresa IS 'Empresa que produz efeitos. Pode ser interpretada também como Fornecedor ou Desenvolvedor';
+
+COMMENT ON COLUMN efeito.empresa.id_empresa IS 'Chave primária de empresa';
+COMMENT ON COLUMN efeito.empresa.nome IS 'Nome da empresa';
+COMMENT ON COLUMN efeito.empresa.site IS 'Site - dado pela própria empresa - no qual o usuário poderá encontrar informações dos produtos da desta';
 
 CREATE TABLE efeito.tecnologia (
 	id_tecnologia int PRIMARY KEY,
@@ -40,6 +145,11 @@ CREATE TABLE efeito.tecnologia (
 	descricao text NOT NULL
 );
 
+COMMENT ON TABLE efeito.tecnologia IS 'Tecnologia/padrão de plugins de áudio no qual um efeito é desenvolvido';
+
+COMMENT ON COLUMN efeito.tecnologia.id_tecnologia IS 'Chave primária de tecnologia';
+COMMENT ON COLUMN efeito.tecnologia.nome IS 'Nome da tecnologia';
+COMMENT ON COLUMN efeito.tecnologia.descricao IS 'Descrição da tecnologia, conforme disponível na Internet';
 
 ------------------------------------------
 -- Categorias de efeitos
@@ -50,6 +160,12 @@ CREATE TABLE efeito.categoria (
 	nome varchar(50) NOT NULL
 );
 
+COMMENT ON TABLE efeito.categoria IS 'Categoria no qual um efeito pode se enquadrar.
+Como um efeito pode estar em mais de uma categoria, efeito.categoria_efeito relaciona as categorias para com os efeitos';
+
+COMMENT ON COLUMN efeito.categoria.id_categoria IS 'Chave primária de categoria';
+COMMENT ON COLUMN efeito.categoria.nome IS 'Nome da categoria no qual o efeito pode se enquadrar';
+
 CREATE TABLE efeito.categoria_efeito (
 	id_categoria int,
 	id_efeito int,
@@ -57,6 +173,10 @@ CREATE TABLE efeito.categoria_efeito (
 	PRIMARY KEY(id_categoria, id_efeito)
 );
 
+COMMENT ON TABLE efeito.categoria IS 'Responsável por relacionar categorias e efeitos, de forma a permitir uma relação muitos-para-muitos';
+
+COMMENT ON COLUMN efeito.categoria_efeito.id_categoria IS 'Referência para chave primária de categoria';
+COMMENT ON COLUMN efeito.categoria_efeito.id_efeito IS 'Referência para chave primária de efeito';
 
 ------------------------------------------
 -- Plug
@@ -68,11 +188,34 @@ CREATE TABLE efeito.plug (
 	nome varchar(50) NOT NULL
 );
 
+COMMENT ON TABLE efeito.plug IS 'Um plug é a porta de entrada ou de saída do áudio.
+Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. \n
+Indo além que pedais de efeitos no mundo real, onde um plug de saída pode conectar somente com um plug de entrada,
+é possível que um plug de saída conecte-se com mais de um plug de entrada e vice-versa, facilitando um processamento de áudio "paralelo".
+
+ - Para saber o tipo de plug, visite efeito.tipo_plug;
+ - Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
+
+COMMENT ON COLUMN efeito.plug.id_plug IS 'Chave primária de plug';
+COMMENT ON COLUMN efeito.plug.id_efeito IS 'Referência para chave primária de efeito';
+COMMENT ON COLUMN efeito.plug.id_tipo_plug IS 'Referência para chave primária de tipo_plug';
+COMMENT ON COLUMN efeito.plug.nome IS 'Nome do plug';
+
 CREATE TABLE efeito.tipo_plug (
 	id_tipo_plug int PRIMARY KEY,
 	nome varchar(50) NOT NULL UNIQUE
 );
 
+COMMENT ON TABLE efeito.tipo_plug IS 'Para este minimundo, um plug pode ser de entrada ou de saída\n\n
+
+Para não ter que separar os tipos distintos de plugs em mais de uma tabela, fora utilizada esta estratégia.\n
+Claramente, existem restrições de uso de plugs conforme seu tipo (como em instancia.conexao). Para estes casos,
+foram utilizadas Triggers para garantir um estado válido para o Banco de dados (conforme as decisões de abstração tormadas).\n\n
+
+Naturalmente, podem haver outros tipos de plugs. Entretanto, para o estado das tecnologias (efeito.tecnologia), estes dois são o suficiente.';
+
+COMMENT ON COLUMN efeito.tipo_plug.id_tipo_plug IS 'Chave primária de tipo_plug';
+COMMENT ON COLUMN efeito.tipo_plug.nome IS 'Nome do tipo do plug';
 ------------------------------------------
 -- Parametro
 ------------------------------------------
@@ -92,6 +235,24 @@ CREATE TABLE efeito.parametro (
 	 WHERE maximo < valor_padrao
 	*/
 );
+
+COMMENT ON TABLE efeito.parametro IS 'Parametro refere-se às parametrizações para um determinado efeito.
+Esta tabela enumera os possíveis parâmetros de um efeito, bem como o estado possível deste, determinando seu domínio através 
+de parametro.minimo, parametro.máximo e parametro.valor_padrao.\n\n
+
+Note entretanto que uma tupla não contém o valor (estado atual) de um parâmetro para um efeito, pois este trabalho fora direcionado
+para instancia.configuracao_efeito_parametro.\n\n
+
+ - Para detalhes sobre como definir um valor a um parâmetro, visite instancia.configuracao_efeito_parametro;\n
+ - Para detalhes sobre o que é uma instância de um efeito, visite instancia.instancia_efeito.';
+
+
+COMMENT ON COLUMN efeito.parametro.id_parametro IS 'Chave primária de parametro';
+COMMENT ON COLUMN efeito.parametro.id_efeito IS 'Referência para chave primária de efeito';
+COMMENT ON COLUMN efeito.parametro.nome IS 'Nome do parâmetro';
+COMMENT ON COLUMN efeito.parametro.minimo IS 'Menor valor possível no qual este parâmetro pode assumir';
+COMMENT ON COLUMN efeito.parametro.maximo IS 'Maior valor possível no qual este parâmetro pode assumir';
+COMMENT ON COLUMN efeito.parametro.valor_padrao IS 'Valor padrão do parâmetro. Obviamente, deve estar dentro do intervalo [minimo, maximo]';
 
 ------------------------------------------
 -- Relacionamentos de chave estrangeira
@@ -142,6 +303,14 @@ CREATE TABLE instancia.conexao (
 	UNIQUE (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
 );
 
+COMMENT ON TABLE instancia.conexao IS '';
+ 
+COMMENT ON COLUMN instancia.conexao.id_conexao IS 'Chave primária de conexao';
+COMMENT ON COLUMN instancia.conexao.id_instancia_efeito_saida IS 'Referência para chave primária de instancia_efeito. Instância de efeito cuja seu efeito possua o plug de saída (id_plug_saida)';
+COMMENT ON COLUMN instancia.conexao.id_plug_saida IS 'Referência para chave primária de plug. Plug deve ser do tipo_plug 2:saída. Representa o plug de origem, onde o qual a conexão entre as instancia_efeitos parte. Pode ser entendido como Vértice de origem de uma Aresta do grafo "Conexões de um Patch"';
+COMMENT ON COLUMN instancia.conexao.id_instancia_efeito_entrada IS 'Menor valor possível no qual este parâmetro pode assumir. Instância de efeito cuja seu efeito possua o plug de entrada (id_plug_entrada)';
+COMMENT ON COLUMN instancia.conexao.id_plug_entrada IS 'Referência para chave primária de plug. Plug deve ser do tipo_plug 1:entrada. Representa o plug de destino, onde o qual a conexão entre as instancia_efeitos destina-se. Pode ser entendido como Vértice de destino de uma Aresta do grafo "Conexões de um Patch"';
+
 ------------------------------------------
 -- Instância, Patchs e Bancos
 ------------------------------------------
@@ -150,6 +319,10 @@ CREATE TABLE instancia.instancia_efeito (
 	id_efeito int NOT NULL,
 	id_patch int NOT NULL
 );
+
+COMMENT ON COLUMN instancia.instancia_efeito.id_instancia_efeito IS 'Chave primária de instancia_efeito';
+COMMENT ON COLUMN instancia.instancia_efeito.id_efeito IS 'Referência para chave primária de efeito. Instância efeito "é do tipo" efeito';
+COMMENT ON COLUMN instancia.instancia_efeito.id_patch IS 'Referência para chave primária de patch. Patch no qual instância está contida';
 
 CREATE TABLE instancia.patch (
 	id_patch int PRIMARY KEY,
@@ -160,6 +333,11 @@ CREATE TABLE instancia.patch (
 	UNIQUE (id_banco, posicao)
 );
 
+COMMENT ON COLUMN instancia.patch.id_patch IS 'Chave primária de patch';
+COMMENT ON COLUMN instancia.patch.id_banco IS 'Referência para chave primária de banco. Banco no qual o Patch pertence';
+COMMENT ON COLUMN instancia.patch.nome IS 'Nome representativo do patch. Deve ser curto, pois este poderá ser exibido em um display pequeno';
+--COMMENT ON COLUMN instancia.patch.posicao IS 'Posição de acesso para o patch'; -- Não sei se irei por
+
 CREATE TABLE instancia.banco (
 	id_banco int PRIMARY KEY,
 	nome VARCHAR(20) NOT NULL,
@@ -167,6 +345,10 @@ CREATE TABLE instancia.banco (
 
 	UNIQUE (posicao)
 );
+
+COMMENT ON COLUMN instancia.banco.id_banco IS 'Chave primária de banco';
+COMMENT ON COLUMN instancia.banco.nome IS 'Nome representativo do banco. Deve ser curto, pois este poderá ser exibido em um display pequeno';
+--COMMENT ON COLUMN instancia.banco.posicao IS 'Posição de acesso para o banco'; -- Não sei se irei por
 
 ------------------------------------------
 -- Configuração e parâmetros
@@ -179,6 +361,11 @@ CREATE TABLE instancia.configuracao_efeito_parametro (
 
 	UNIQUE (id_instancia_efeito, id_parametro)
 );
+
+COMMENT ON COLUMN instancia.configuracao_efeito_parametro.id_configuracao_efeito_parametro IS 'Chave primária de configuracao_efeito_parametro';
+COMMENT ON COLUMN instancia.configuracao_efeito_parametro.id_instancia_efeito IS 'Referência para instancia_efeito. Representa a instância do efeito no qual o parâmetro pertence';
+COMMENT ON COLUMN instancia.configuracao_efeito_parametro.id_parametro IS 'Referência para parametro. Representa o parametro no qual será atribuído um valor';
+COMMENT ON COLUMN instancia.configuracao_efeito_parametro.valor IS 'Valor do parametro para a instancia_efeito. Este deve estar contido no intervalo [efeito.parametro.minimo, efeito.parametro.maximo]';
 
 ------------------------------------------
 -- Relacionamentos de chave estrangeira
@@ -452,3 +639,5 @@ SELECT view_efeito_descricao.id_efeito, view_efeito_descricao.nome, view_efeito_
 
  WHERE id_efeito = 100;
 
+SELECT * FROM dicionario_dados.atributo;
+SELECT * FROM dicionario_dados.relacao;

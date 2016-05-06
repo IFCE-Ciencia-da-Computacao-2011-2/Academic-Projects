@@ -1,11 +1,17 @@
 ﻿DROP SCHEMA IF EXISTS efeito CASCADE;
 CREATE SCHEMA efeito;
 
+COMMENT ON SCHEMA efeito IS 'Schema responsável por agrupar elementos referentes a efeito: Definições de efeitos, tecnologias de efeitos, empresas que fizeram efeitos, parâmetros de efeitos, tipos (categorias) de efeitos...';
+
 DROP SCHEMA IF EXISTS instancia CASCADE;
 CREATE SCHEMA instancia;
 
+COMMENT ON SCHEMA instancia IS 'Schema responsável por agrupar elementos referentes a instância: Instância de efeito, valores atuais dos parâmetros de determinada instância, agrupamento de instâncias em um patch, agrupamento de patchs em um banco, conexões entre instâncias de um patch...';
+
 DROP SCHEMA IF EXISTS dicionario_dados CASCADE;
 CREATE SCHEMA dicionario_dados;
+
+COMMENT ON SCHEMA dicionario_dados IS 'Schema responsável por abstrair o catálogo do banco, expondo em views simplificadas dados relevantes para a geração de um dicionário de dados';
 
 -------------------------------------------------------------------------------------
 -- Esquema dicionario_dados
@@ -114,11 +120,10 @@ CREATE TABLE efeito.efeito (
 	id_tecnologia int NOT NULL
 );
 
-COMMENT ON TABLE efeito.efeito IS 'Efeitos são plugins que simulam "pedais" (de guitarra, de baixo...), "amplificadores", "sintetizadores" - dentre outros equipamentos - 
-cujo intuito é melhorar (corrigir), modificar e (ou) incrementar o áudio obtido externamente (por uma interface de áudio) ou internamente (por um efeito anterior).\n
-O produto (áudio processado) poderá ser utilizado externamente (sendo disposto em uma interface de áudio) ou internamente (por um efeito posterior ou gravação de áudio)\n\n
+COMMENT ON TABLE efeito.efeito IS 'Efeitos são plugins que simulam "pedais" (de guitarra, de baixo...), "amplificadores", "sintetizadores" - dentre outros equipamentos - cujo intuito é melhorar (corrigir), modificar e (ou) incrementar o áudio obtido externamente (por uma interface de áudio) ou internamente (por um efeito anterior).
+O produto (áudio processado) poderá ser utilizado externamente (sendo disposto em uma interface de áudio) ou internamente (por um efeito posterior ou gravação de áudio)
 
- - Para conexões entre efeitos, visite instancia.conexao\n
+ - Para conexões entre efeitos, visite instancia.conexao;
  - Para representação de interface de áudio, visite efeito.';
 
 COMMENT ON COLUMN efeito.efeito.id_efeito IS 'Chave primária de efeito';
@@ -193,9 +198,8 @@ CREATE TABLE efeito.plug (
 );
 
 COMMENT ON TABLE efeito.plug IS 'Um plug é a porta de entrada ou de saída do áudio.
-Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. \n
-Indo além que pedais de efeitos no mundo real, onde um plug de saída pode conectar somente com um plug de entrada,
-é possível que um plug de saída conecte-se com mais de um plug de entrada e vice-versa, facilitando um processamento de áudio "paralelo".
+Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. 
+Indo além que pedais de efeitos no mundo real, onde um plug de saída pode conectar somente com um plug de entrada, é possível que um plug de saída conecte-se com mais de um plug de entrada e vice-versa, facilitando um processamento de áudio "paralelo".
 
  - Para saber o tipo de plug, visite efeito.tipo_plug;
  - Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
@@ -210,11 +214,10 @@ CREATE TABLE efeito.tipo_plug (
 	nome varchar(50) NOT NULL UNIQUE
 );
 
-COMMENT ON TABLE efeito.tipo_plug IS 'Para este minimundo, um plug pode ser de entrada ou de saída\n\n
+COMMENT ON TABLE efeito.tipo_plug IS 'Para este minimundo, um plug pode ser de entrada ou de saída
 
-Para não ter que separar os tipos distintos de plugs em mais de uma tabela, fora utilizada esta estratégia.\n
-Claramente, existem restrições de uso de plugs conforme seu tipo (como em instancia.conexao). Para estes casos,
-foram utilizadas Triggers para garantir um estado válido para o Banco de dados (conforme as decisões de abstração tormadas).\n\n
+Para não ter que separar os tipos distintos de plugs em mais de uma tabela, fora utilizada esta estratégia.
+Claramente, existem restrições de uso de plugs conforme seu tipo (como em instancia.conexao). Para estes casos, foram utilizadas Triggers para garantir um estado válido para o Banco de dados (conforme as decisões de abstração tormadas).
 
 Naturalmente, podem haver outros tipos de plugs. Entretanto, para o estado das tecnologias (efeito.tecnologia), estes dois são o suficiente.';
 
@@ -241,13 +244,11 @@ CREATE TABLE efeito.parametro (
 );
 
 COMMENT ON TABLE efeito.parametro IS 'Parametro refere-se às parametrizações para um determinado efeito.
-Esta tabela enumera os possíveis parâmetros de um efeito, bem como o estado possível deste, determinando seu domínio através 
-de parametro.minimo, parametro.máximo e parametro.valor_padrao.\n\n
+Esta tabela enumera os possíveis parâmetros de um efeito, bem como o estado possível deste, determinando seu domínio através de parametro.minimo, parametro.máximo e parametro.valor_padrao.
 
-Note entretanto que uma tupla não contém o valor (estado atual) de um parâmetro para um efeito, pois este trabalho fora direcionado
-para instancia.configuracao_efeito_parametro.\n\n
+Note entretanto que uma tupla não contém o valor (estado atual) de um parâmetro para um efeito, pois este trabalho fora direcionado para instancia.configuracao_efeito_parametro.
 
- - Para detalhes sobre como definir um valor a um parâmetro, visite instancia.configuracao_efeito_parametro;\n
+ - Para detalhes sobre como definir um valor a um parâmetro, visite instancia.configuracao_efeito_parametro;
  - Para detalhes sobre o que é uma instância de um efeito, visite instancia.instancia_efeito.';
 
 

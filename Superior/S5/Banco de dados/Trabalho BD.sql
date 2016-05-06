@@ -14,7 +14,6 @@ CREATE SCHEMA dicionario_dados;
 
 -- http://dba.stackexchange.com/questions/30061/how-do-i-list-all-tables-in-all-schemas-owned-by-the-current-user-in-postgresql
 DROP view IF EXISTS dicionario_dados.relacao;
-
 CREATE OR REPLACE VIEW dicionario_dados.relacao AS
 	SELECT pg_namespace.nspname AS namespace,
 	       RelName as tabela,
@@ -33,13 +32,14 @@ CREATE OR REPLACE VIEW dicionario_dados.relacao AS
 	 JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
 	 WHERE pg_class.relkind NOT IN ('i', 'S')
-	   AND pg_namespace.nspname IN ('efeito', 'instancia')
+	   AND pg_namespace.nspname IN ('efeito', 'instancia', 'dicionario_dados')
 
 	   ORDER BY namespace, tipo;
 
+COMMENT ON VIEW dicionario_dados.relacao IS 'Dispõe metadados importante de relações, sejam estas tabelas ou views';
+
+
 DROP view IF EXISTS dicionario_dados.atributo;
-
-
 CREATE OR REPLACE VIEW dicionario_dados.atributo AS
 
 -- http://blog.delogic.com.br/criar-dicionario-de-dados-em-postgres/
@@ -85,10 +85,12 @@ SELECT nsp.nspname AS Namespace,
   LEFT JOIN pg_attrdef atrdef ON atrdef.adrelid = tbl.oid AND atrdef.adnum = atr.attnum
   LEFT JOIN pg_namespace nsp ON nsp.oid = tbl.relnamespace
  WHERE tbl.relkind = 'r'::char
-   AND nsp.nspname IN ('efeito', 'instancia')
+   AND nsp.nspname IN ('efeito', 'instancia', 'dicionario_dados')
    AND atr.attnum > 0
  order by namespace, Tabela, atr.attnum /* Número da coluna*/, Coluna, Chave_Primaria desc, Chave_Estrangeira desc;
 
+
+COMMENT ON VIEW dicionario_dados.atributo IS 'Dispõe metadados importante de atributos';
 -------------------------------------------------------------------------------------
 -- Esquema efeito
 -------------------------------------------------------------------------------------
@@ -97,6 +99,8 @@ SELECT nsp.nspname AS Namespace,
 ------------------------------------------
 DROP DOMAIN IF EXISTS efeito.Site CASCADE;
 CREATE DOMAIN efeito.Site varchar(200);
+
+COMMENT ON DOMAIN efeito.Site IS 'Endereço eletrônico';
 
 ------------------------------------------
 -- Efeito
@@ -303,8 +307,10 @@ CREATE TABLE instancia.conexao (
 	UNIQUE (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
 );
 
-COMMENT ON TABLE instancia.conexao IS '';
- 
+COMMENT ON TABLE instancia.conexao IS 'Representa uma conexão entre duas instancia_efeito. De forma análoga a conexão real de pedais, representa um cabo de áudio ligando dois pedais, onde uma ponta conecta-se em um plug específico de saída de um pedal A para um plug específico de entrada de outro pedal B, de modo a transportar o áudio que sai de A para B.
+
+Pode-se também interpretar instancia.patch como um grafo, onde as portas (instancia.porta) dos efeitos das instâncias são os nós e as conexões (instancia.conexao) representa os vértices';
+
 COMMENT ON COLUMN instancia.conexao.id_conexao IS 'Chave primária de conexao';
 COMMENT ON COLUMN instancia.conexao.id_instancia_efeito_saida IS 'Referência para chave primária de instancia_efeito. Instância de efeito cuja seu efeito possua o plug de saída (id_plug_saida)';
 COMMENT ON COLUMN instancia.conexao.id_plug_saida IS 'Referência para chave primária de plug. Plug deve ser do tipo_plug 2:saída. Representa o plug de origem, onde o qual a conexão entre as instancia_efeitos parte. Pode ser entendido como Vértice de origem de uma Aresta do grafo "Conexões de um Patch"';
@@ -320,6 +326,10 @@ CREATE TABLE instancia.instancia_efeito (
 	id_patch int NOT NULL
 );
 
+COMMENT ON TABLE instancia.instancia_efeito IS 'efeito.efeito está para "obra" como instancia.instancia_efeito está para "mídia física".
+
+Como um efeito pode ser utilizado múltiplas vezes em uma instancia.patch e cada um tem sua devida configuração (conjunto de instancia.configuracao_efeito_parametro para cada instancia.instancia_efeito), instancia_efeito se faz necessária.';
+
 COMMENT ON COLUMN instancia.instancia_efeito.id_instancia_efeito IS 'Chave primária de instancia_efeito';
 COMMENT ON COLUMN instancia.instancia_efeito.id_efeito IS 'Referência para chave primária de efeito. Instância efeito "é do tipo" efeito';
 COMMENT ON COLUMN instancia.instancia_efeito.id_patch IS 'Referência para chave primária de patch. Patch no qual instância está contida';
@@ -333,6 +343,9 @@ CREATE TABLE instancia.patch (
 	UNIQUE (id_banco, posicao)
 );
 
+
+COMMENT ON TABLE instancia.patch IS 'Um patch representa uma configuração de uso dos efeitos que relaciona instâncias de efeitos, as conexões entre instâncias, o estado das instâncias e os valores atuais dos parâmetros de cada instância.';
+
 COMMENT ON COLUMN instancia.patch.id_patch IS 'Chave primária de patch';
 COMMENT ON COLUMN instancia.patch.id_banco IS 'Referência para chave primária de banco. Banco no qual o Patch pertence';
 COMMENT ON COLUMN instancia.patch.nome IS 'Nome representativo do patch. Deve ser curto, pois este poderá ser exibido em um display pequeno';
@@ -345,6 +358,13 @@ CREATE TABLE instancia.banco (
 
 	UNIQUE (posicao)
 );
+
+COMMENT ON TABLE instancia.banco IS 'Um banco serve como agrupador de patchs.
+
+Usuários costumam utilizar bancos como forma de agrupar um conjunto de patchs para determinada situação. Ex:
+ * Banco "Rock" contendo patchs para músicas clássicas do rock;
+ * Banco "Show dia dd/mm/yyyy" contendo patchs que serão utilizados em determinado show
+ * Banco "Artista Tal" contendo patchs criados pelo próprio artista como forma que querer agradar seu nicho de fãs';
 
 COMMENT ON COLUMN instancia.banco.id_banco IS 'Chave primária de banco';
 COMMENT ON COLUMN instancia.banco.nome IS 'Nome representativo do banco. Deve ser curto, pois este poderá ser exibido em um display pequeno';
@@ -361,6 +381,10 @@ CREATE TABLE instancia.configuracao_efeito_parametro (
 
 	UNIQUE (id_instancia_efeito, id_parametro)
 );
+
+COMMENT ON TABLE instancia.configuracao_efeito_parametro IS 'Sabendo que um efeito pode ser utilizado em mais de um patch, como também pode ser utilizado mais de uma vez em um mesmo patch, os valores atuais dos parâmetros devem ser persistidos vinculando efeito.instancia_efeito.
+
+Uma tupla de instancia.configuracao_efeito_parametro representa: Um valor de um determinado parâmetro de uma instância de um efeito';
 
 COMMENT ON COLUMN instancia.configuracao_efeito_parametro.id_configuracao_efeito_parametro IS 'Chave primária de configuracao_efeito_parametro';
 COMMENT ON COLUMN instancia.configuracao_efeito_parametro.id_instancia_efeito IS 'Referência para instancia_efeito. Representa a instância do efeito no qual o parâmetro pertence';
@@ -477,6 +501,13 @@ CREATE TRIGGER trigger_gerenciar_conexao
 AFTER INSERT OR UPDATE ON instancia.conexao
    FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerenciar_conexao();
 
+COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
+
+ - Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se;
+ - Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se;
+ - Plug de SAÍDA deve ser do tipo esperado (Output);
+ - Plug de ENTRADA deve ser do tipo esperado (Input).';
+
 -- Testes
 --  1. Plug saída não pertencente ao efeito de saída
 --INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
@@ -534,6 +565,16 @@ CREATE TRIGGER trigger_gerenciar_conexao_ciclos
 AFTER INSERT OR UPDATE ON instancia.conexao
    FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerenciar_conexao_ciclos();
 
+
+COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
+
+ - Não deve haver ciclos no nível de instancia_efeito.
+
+Seguem exemplos. A, B, C e D são exemplos de instancia.instancia_efeito:
+
+ * Não há ciclo: START -> A -> B -> C -> END
+ * Há ciclo: START -> A -> B -> D -> A -- CICLO!';
+ 
 -- 1. Não devem haver ciclos
 -- START -> A -> B -> C -> END
 -- START -> A -> B -> D -> A -- CICLO!
@@ -560,10 +601,14 @@ CREATE OR REPLACE FUNCTION instancia.funcao_gerar_configuracao_efeito_parametro(
 $$ LANGUAGE plpgsql;
 
 
-CREATE TRIGGER funcao_gerar_configuracao_efeito_parametro
+CREATE TRIGGER trigger_gerar_configuracao_efeito_parametro
 AFTER INSERT ON instancia.instancia_efeito
    FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerar_configuracao_efeito_parametro();
 
+COMMENT ON TRIGGER trigger_gerar_configuracao_efeito_parametro ON instancia.instancia_efeito IS 'Trigger que verifica as seguintes restrições para INSERT em instancia.instancia_efeito:
+Para uma instancia_efeito criada, serão gerados automaticamente instancia.configuracao_efeito_parametro para cada parâmetro do efeito da instância.
+O valor será o efeito.parametro.valor_padrao';
+ 
 -- Detalhes dos valores dos parâmetros dos efeitos de um patch
 /*
 SELECT id_patch || ' - ' || patch.nome AS patch, id_efeito, id_instancia_efeito, id_parametro, efeito.nome || ': ' || parametro.nome AS parametro, configuracao_efeito_parametro.valor AS valor_atual, valor_padrao || ' [' ||minimo || ', ' || maximo || ']' AS valor_padrao
@@ -596,9 +641,13 @@ CREATE OR REPLACE FUNCTION instancia.funcao_atualizar_valor_instancia_efeito_par
     END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER funcao_atualizar_valor_instancia_efeito_parametro
+CREATE TRIGGER trigger_atualizar_valor_instancia_efeito_parametro
 AFTER UPDATE ON instancia.configuracao_efeito_parametro
    FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_atualizar_valor_instancia_efeito_parametro();
+
+COMMENT ON TRIGGER trigger_atualizar_valor_instancia_efeito_parametro ON instancia.configuracao_efeito_parametro IS 'Trigger que verifica as seguintes restrições para UPDATE em instancia.configuracao_efeito_parametro:
+
+Valor de um parâmetro (instancia.configuracao_efeito_parametro.valor) deve estar entre o mínimo e o máximo do parâmetro correspondente ([efeito.parametro.minimo, efeito.parametro.maximo])';
 
 -- Menor
 /*

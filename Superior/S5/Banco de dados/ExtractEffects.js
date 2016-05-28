@@ -22,7 +22,7 @@ class Efeito {
     	efeito.nome = effect.name;
         efeito.descricao = effect.comment.replace(new RegExp("'", 'g'), "''").replace("\n", "");
     	efeito.identificador = effect.uri;
-    	efeito.id_tecnologia = 1;//"lv2";
+    	efeito.id_tecnologia = id%4 + 1;
 
         efeito.empresa = this.empresa(effect);
         efeito.plugs = this.plugs(id, effect.ports);
@@ -176,7 +176,8 @@ class Print {
 
         this.id_parametro = 1;
         data += this.printDataTipo2(this.parametrosCabecalho, effect => this.parametros(effect));
-        this.id_plug = 1;
+        this.id_plug_tipo_entrada = 1;
+        this.id_plug_tipo_saida = 1;
         data += this.printDataTipo2(this.plugsCabecalho, effect => this.plugs(effect));
 
         return data;
@@ -257,7 +258,7 @@ class Print {
 
     plugsCabecalho() {
         let data = "";
-        data += ` INSERT INTO efeito.plug (id_plug, id_efeito, id_tipo_plug, nome) \n`;
+        data += ` INSERT INTO efeito.plug (id_plug, id_tipo_plug, id_efeito, nome) \n`;
         data += `      VALUES \n`;
 
         return data;
@@ -265,8 +266,10 @@ class Print {
 
     plugs(efeito) {
         let data = [];
-        for (let plug of efeito.plugs)
-            data.push(`(${this.id_plug++}, ${plug.id_efeito}, ${plug.tipo}, '${plug.nome}')`);
+        for (let plug of efeito.plugs) {
+            let id = plug.tipo == 1 ? this.id_plug_tipo_entrada++ : this.id_plug_tipo_saida++;
+            data.push(`(${id}, ${plug.tipo}, ${plug.id_efeito}, '${plug.nome}')`);
+        }
 
         return data;
     }

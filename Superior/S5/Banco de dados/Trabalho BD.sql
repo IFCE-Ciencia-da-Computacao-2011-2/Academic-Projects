@@ -182,7 +182,7 @@ CREATE TABLE efeito.categoria_efeito (
 	PRIMARY KEY(id_categoria, id_efeito)
 );
 
-COMMENT ON TABLE efeito.categoria IS 'Responsável por relacionar categorias e efeitos, de forma a permitir uma relação muitos-para-muitos';
+COMMENT ON TABLE efeito.categoria_efeito IS 'Responsável por relacionar categorias e efeitos, de forma a permitir uma relação muitos-para-muitos';
 
 COMMENT ON COLUMN efeito.categoria_efeito.id_categoria IS 'Referência para chave primária de categoria';
 COMMENT ON COLUMN efeito.categoria_efeito.id_efeito IS 'Referência para chave primária de efeito';
@@ -191,10 +191,13 @@ COMMENT ON COLUMN efeito.categoria_efeito.id_efeito IS 'Referência para chave p
 -- Plug
 ------------------------------------------
 CREATE TABLE efeito.plug (
-	id_plug int PRIMARY KEY,
+	id_plug int,
+	id_tipo_plug int,
+
 	id_efeito int NOT NULL,
-	id_tipo_plug int NOT NULL,
-	nome varchar(50) NOT NULL
+	nome varchar(50) NOT NULL,
+
+	PRIMARY KEY (id_plug, id_tipo_plug)
 );
 
 COMMENT ON TABLE efeito.plug IS 'Um plug é a porta de entrada ou de saída do áudio.
@@ -301,9 +304,11 @@ CREATE TABLE instancia.conexao (
 
 	id_instancia_efeito_saida int NOT NULL,
 	id_plug_saida int NOT NULL,
+	id_tipo_plug_saida int NOT NULL CHECK (id_tipo_plug_saida = 1),
 
 	id_instancia_efeito_entrada int NOT NULL,
 	id_plug_entrada int NOT NULL,
+	id_tipo_plug_entrada int NOT NULL CHECK (id_tipo_plug_entrada = 2),
 	
 	UNIQUE (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
 );
@@ -395,8 +400,8 @@ COMMENT ON COLUMN instancia.configuracao_efeito_parametro.valor IS 'Valor do par
 ------------------------------------------
 -- Relacionamentos de chave estrangeira
 ------------------------------------------
-ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_entrada) REFERENCES efeito.plug (id_plug);
-ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_saida) REFERENCES efeito.plug (id_plug);
+ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_saida, id_tipo_plug_saida) REFERENCES efeito.plug (id_plug, id_tipo_plug);
+ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_entrada, id_tipo_plug_entrada) REFERENCES efeito.plug (id_plug, id_tipo_plug);
 
 ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_instancia_efeito_entrada) REFERENCES instancia.instancia_efeito (id_instancia_efeito);
 ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_instancia_efeito_saida) REFERENCES instancia.instancia_efeito (id_instancia_efeito);
@@ -473,26 +478,6 @@ CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger 
 		RAISE EXCEPTION 'Plug de entrada (id_plug_entrada) % não pertence ao efeito no qual sua instância (instancia_efeito_entrada) % pertence', NEW.id_plug_saida, NEW.id_instancia_efeito_saida;
 	END IF;
 
-	-- Plug de SAÍDA deve ser do tipo esperado (Output)
-	IF NOT EXISTS(
-		SELECT *
-		  FROM efeito.plug
-		 WHERE id_tipo_plug = 2 -- Output
-		   AND id_plug = NEW.id_plug_saida
-	) THEN
-		RAISE EXCEPTION 'Plug de saída (id_plug_saída) % não é do tipo esperado (id_tipo_plug = 2, Output)', NEW.id_plug_saida;
-	END IF;
-
-	-- Plug de ENTRADA deve ser do tipo esperado (Input)
-	IF NOT EXISTS(
-		SELECT *
-		  FROM efeito.plug
-		 WHERE id_tipo_plug = 1 -- Input
-		   AND id_plug = NEW.id_plug_entrada
-	) THEN
-		RAISE EXCEPTION 'Plug de entrada (id_plug_entrada) % não é do tipo esperado (id_tipo_plug = 1, Input)', NEW.id_plug_entrada;
-	END IF;
-
         RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;
@@ -505,9 +490,7 @@ AFTER INSERT OR UPDATE ON instancia.conexao
 COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
 
  - Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se;
- - Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se;
- - Plug de SAÍDA deve ser do tipo esperado (Output);
- - Plug de ENTRADA deve ser do tipo esperado (Input).';
+ - Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se.';
 
 -- Testes
 --  1. Plug saída não pertencente ao efeito de saída
@@ -516,12 +499,6 @@ COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger qu
 --  2. Plug entrada não pertencente ao efeito de entrada
 --INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
 --     VALUES (10001, 1, 2, 2, 50);
---  3. Plug de saída deve ser do tipo output
---INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
---     VALUES (10002, 1, 1, 2, 1);
---  4. Plug de saída deve ser do tipo input
---INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
---     VALUES (10002, 1, 3, 2, 3);
 
 
 CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao_ciclos() RETURNS trigger AS $$

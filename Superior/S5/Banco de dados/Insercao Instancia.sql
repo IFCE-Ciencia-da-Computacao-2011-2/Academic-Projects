@@ -28,7 +28,11 @@ INSERT INTO instancia.instancia_efeito (id_instancia_efeito, id_efeito, id_patch
             (14,   1,  3), -- Placa de áudio - ENTRADA dos amplificadores
 
             (15,   2,  4), -- Placa de áudio - SAIDA dos instrumentos
-            (16,   1,  4); -- Placa de áudio - ENTRADA dos amplificadores
+            (16,   1,  4), -- Placa de áudio - ENTRADA dos amplificadores
+
+            (17,   2,  5), -- Placa de áudio - SAIDA dos instrumentos
+            (18, 175,  5), -- "DS1"
+            (19,   1,  5); -- Placa de áudio - ENTRADA dos amplificadores
 
 
 --DELETE FROM instancia.conexao;
@@ -52,7 +56,9 @@ INSERT INTO instancia.conexao (id_instancia_efeito_saida, id_plug_saida, id_inst
 	    (13, 494, 14,   1), -- "C* Eq10X2 - 10-band equalizer - Out Left" -> "Placa de áudio - ENTRADA dos amplificadores - Canal Esquerdo"
 
 	    (15,   1, 16, 1), -- "Placa de áudio - SAÍDA dos instrumentos - Canal Esquerdo" -> "Placa de áudio - ENTRADA dos amplificadores - Canal Esquerdo"
-	    (15,   2, 16, 2); -- "Placa de áudio - SAÍDA dos instrumentos - Canal Direito" -> "Placa de áudio - ENTRADA dos amplificadores - Canal Direito"
+	    (15,   2, 16, 2), -- "Placa de áudio - SAÍDA dos instrumentos - Canal Direito" -> "Placa de áudio - ENTRADA dos amplificadores - Canal Direito"
+
+	    (17,   1, 18, 236); -- "Placa de áudio - SAÍDA dos instrumentos - Canal Esquerdo" -> "DS1 - In"
 	    
 
 -- Plugs de um patch - Saida

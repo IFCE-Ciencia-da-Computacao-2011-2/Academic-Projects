@@ -219,6 +219,7 @@ Como um efeito pode estar em mais de uma categoria, efeito.categoria_efeito rela
 
 COMMENT ON COLUMN efeito.categoria.id_categoria IS 'Chave primária de categoria';
 COMMENT ON COLUMN efeito.categoria.nome IS 'Nome da categoria no qual o efeito pode se enquadrar';
+COMMENT ON COLUMN efeito.categoria.restritiva IS 'Uma categoria restritiva (= true) faz com que só seja permitido haver um efeito igual em um mesmo patch';
 
 CREATE TABLE efeito.categoria_efeito (
 	id_categoria int,
@@ -506,6 +507,9 @@ CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger 
 	id_do_efeito int;
 
     BEGIN
+	-- Em uma conexão, somente instâncias do mesmo patch podem ser conectadas entre si
+	--instancia.conexao
+	
 	-- Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se
 	IF NOT EXISTS(
 		SELECT *
@@ -726,7 +730,7 @@ AFTER UPDATE ON instancia.configuracao_efeito_parametro
 
 COMMENT ON TRIGGER trigger_atualizar_valor_instancia_efeito_parametro ON instancia.configuracao_efeito_parametro IS 'Trigger que verifica as seguintes restrições para UPDATE em instancia.configuracao_efeito_parametro:
 
-Valor de um parâmetro (instancia.configuracao_efeito_parametro.valor) deve estar entre o mínimo e o máximo do parâmetro correspondente ([efeito.parametro.minimo, efeito.parametro.maximo])';
+ - Valor de um parâmetro (instancia.configuracao_efeito_parametro.valor) deve estar entre o mínimo e o máximo do parâmetro correspondente ([efeito.parametro.minimo, efeito.parametro.maximo])';
 
 /*
 -- 1 - Menor
@@ -740,9 +744,63 @@ UPDATE instancia.configuracao_efeito_parametro
   WHERE id_configuracao_efeito_parametro = 1;
 */
 
+-- Não podem haver efeitos de categorias restritivas repetidos em um patch
+CREATE OR REPLACE FUNCTION instancia.funcao_limitar_instancia_efeito() RETURNS trigger AS $$
+    BEGIN
+	IF EXISTS (
+		SELECT *
+		  FROM instancia.instancia_efeito
+		  JOIN efeito.efeito USING (id_efeito)
+		  JOIN efeito.categoria_efeito USING (id_efeito)
+		  JOIN efeito.categoria USING (id_categoria)
+
+		 WHERE id_efeito = NEW.id_efeito
+		   AND restritiva = TRUE
+		   AND id_patch = NEW.id_patch
+	) THEN
+		RAISE EXCEPTION 'A instância que está tentando persistir possui uma categoria que é RESTRITIVA. Já há uma instância do efeito ''% - %'' para o patch %. Logo, não é possível inserí-la',
+			NEW.id_efeito,
+			nome FROM efeito.efeito WHERE id_efeito = NEW.id_efeito,
+			NEW.id_patch;
+	END IF;
+
+	RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_limitar_instancia_efeito
+BEFORE INSERT OR UPDATE ON instancia.instancia_efeito
+   FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_limitar_instancia_efeito();
+
+COMMENT ON TRIGGER trigger_limitar_instancia_efeito ON instancia.instancia_efeito IS 'Trigger que verifica as seguintes restrições para CREATE e UPDATE em instancia.instancia_efeito:
+
+ - Não podem haver efeitos de categorias restritivas repetidos em um mesmo patch';
+
+/*
+-- 1 - INSERT
+INSERT INTO instancia.instancia_efeito (id_instancia_efeito, id_efeito, id_patch)
+     VALUES (10000, 2, 1); -- Placa de áudio - SAIDA dos instrumentos
+
+INSERT INTO instancia.instancia_efeito (id_instancia_efeito, id_efeito, id_patch)
+     VALUES (10000, 1, 1); -- Placa de áudio - ENTRADA dos instrumentos
+
+-- 2 - UPDATE
+UPDATE instancia.instancia_efeito
+   SET id_efeito=1, id_patch=1
+ WHERE id_instancia_efeito=1
+
+UPDATE instancia.instancia_efeito
+   SET id_efeito=2, id_patch=1
+ WHERE id_instancia_efeito=1
+*/
 
 ------------------------------------------
--- Dados de exemplo
+-- Dados de exemplo - Efeito
+------------------------------------------
+
+
+------------------------------------------
+-- Dados de exemplo - Instância
 ------------------------------------------
 
 

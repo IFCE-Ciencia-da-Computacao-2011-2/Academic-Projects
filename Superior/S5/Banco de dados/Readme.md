@@ -17,4 +17,4 @@
 ### Outros
 
  * **Dicionario de dados.md**: Arquivo gerado a partir de _dicionario_dados.py_
- * **Dicionário de dados.pdf**: Arquivo gerado a partir de _dicionario_dados.py_ + https://stackedit.io/editor
+ * **Dicionário de dados.pdf**: Arquivo gerado a partir de _Dicionario de dados.md_ + https://stackedit.io/editor

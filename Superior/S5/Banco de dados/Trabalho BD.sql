@@ -624,7 +624,7 @@ AFTER INSERT OR UPDATE ON instancia.conexao
    FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerenciar_conexao_ciclos();
 
 
-COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
+COMMENT ON TRIGGER trigger_gerenciar_conexao_ciclos ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
 
  * Não deve haver ciclos no nível de instancia_efeito.
 

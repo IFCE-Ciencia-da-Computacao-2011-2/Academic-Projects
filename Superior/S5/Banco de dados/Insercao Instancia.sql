@@ -34,7 +34,7 @@ INSERT INTO instancia.instancia_efeito (id_instancia_efeito, id_efeito, id_patch
             (18, 175,  5), -- "DS1"
             (19,   1,  5); -- Placa de áudio - ENTRADA dos amplificadores
 
-
+     
 --DELETE FROM instancia.conexao;
 INSERT INTO instancia.conexao (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
      VALUES (1,  1,  2,   7), -- "Placa de áudio - SAÍDA dos instrumentos - Canal Esquerdo" -> "ZamTube - Audio Input 1"

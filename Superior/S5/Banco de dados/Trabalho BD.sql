@@ -503,12 +503,30 @@ CREATE VIEW instancia.view_patch_detalhes AS
 -- Triggers para instancia.conexao
 CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger AS $$
     DECLARE
+    	id_patch_saida int;
+	id_patch_entrada int;
+
 	nome_do_efeito varchar(200);
 	id_do_efeito int;
 
+
     BEGIN
 	-- Em uma conexão, somente instâncias do mesmo patch podem ser conectadas entre si
-	--instancia.conexao
+	SELECT id_patch INTO id_patch_saida
+	  FROM instancia.instancia_efeito
+	 WHERE id_instancia_efeito = NEW.id_instancia_efeito_saida;
+
+	SELECT id_patch INTO id_patch_entrada 
+	  FROM instancia.instancia_efeito
+	 WHERE id_instancia_efeito = NEW.id_instancia_efeito_entrada;
+
+	IF (id_patch_saida != id_patch_entrada) THEN
+		RAISE EXCEPTION 'Somente instâncias do mesmo patch podem ser conectadas entre si.
+Patch de id_instancia_efeito_saida é %.
+Patch de id_instancia_efeito_entrada é %.',
+		id_patch_saida,
+		id_patch_entrada;
+	END IF;
 	
 	-- Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se
 	IF NOT EXISTS(
@@ -563,12 +581,19 @@ AFTER INSERT OR UPDATE ON instancia.conexao
 
 COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
 
- * Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se;
- * Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se.';
+ - Somente instâncias do mesmo patch podem ser conectadas entre si;
+ - Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se;
+ - Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se.';
+
+
 
 /*
 -- Testes
---  1. Plug saída não pertencente ao efeito de saída
+--  1. Em uma conexão, somente instâncias do mesmo patch podem ser conectadas entre si; 
+INSERT INTO instancia.conexao (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+     VALUES (1,  1,  12, 226); -- "Aqui, ao tentarmos inserir uma conexão entre patches diferentes, o erro é lançado"
+
+--  2. Plug saída não pertencente ao efeito de saída
 INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
      VALUES (10000, 1, 50, 2, 1);
 
@@ -576,7 +601,7 @@ UPDATE instancia.conexao
    set id_instancia_efeito_saida=1, id_plug_saida=50, id_instancia_efeito_entrada=2, id_plug_entrada=1
  where id_conexao = 1;
 
---  2. Plug entrada não pertencente ao efeito de entrada
+--  3. Plug entrada não pertencente ao efeito de entrada
 INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
      VALUES (10001, 1, 2, 2, 50);
 

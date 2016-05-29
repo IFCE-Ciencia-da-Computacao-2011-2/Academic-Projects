@@ -1,4 +1,4 @@
- INSERT INTO efeito.empresa (nome, site) 
+﻿ INSERT INTO efeito.empresa (nome, site) 
       VALUES 
              ('ZamAudio', 'http://www.zamaudio.com'),
              ('x42', 'http://gareus.org/'),

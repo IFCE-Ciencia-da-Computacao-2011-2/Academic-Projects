@@ -286,8 +286,8 @@ INSERT INTO efeito.categoria (nome)
       VALUES ('PedalController', 'http://PedalController.github.io/');
 
  INSERT INTO efeito.efeito (id_empresa, id_tecnologia, nome, descricao, identificador) 
-      VALUES (1, 1, 'Placa de áudio - ENTRADA', 'O sinal de instrumentos ligados ao equipamento será acessível por meio desse efeito', 'http://SrMouraSilva.github.io/Placa-de-audio-ENTRADA'),
-	     (1, 1, 'Placa de áudio - SAÍDA', 'Saída de efeitos ligados aqui serão enviados para as saidas do equipamento, que serão utilizadas possivelmente em caixas de som', 'http://SrMouraSilva.github.io/Placa-de-audio-SAIDA');
+      VALUES (1, 1, 'Placa de áudio - ENTRADA dos amplificadores', 'O sinal de instrumentos ligados ao equipamento será acessível por meio desse efeito', 'http://SrMouraSilva.github.io/Placa-de-audio-ENTRADA'),
+	     (1, 1, 'Placa de áudio - SAÍDA dos instrumentos', 'Saída de efeitos ligados aqui serão enviados para as saidas do equipamento, que serão utilizadas possivelmente em caixas de som', 'http://SrMouraSilva.github.io/Placa-de-audio-SAIDA');
 
  INSERT INTO efeito.categoria_efeito (id_categoria, id_efeito) 
       VALUES (1, 1),
@@ -295,14 +295,14 @@ INSERT INTO efeito.categoria (nome)
 
 -- Saída dos efeitos do patch para as entrada das "caixas de som"
  INSERT INTO efeito.plug_entrada (id_efeito, nome) 
-      VALUES (1, 'Esquerda'),
-	     (1, 'Direita'),
+      VALUES (1, 'Canal Esquerdo'),
+	     (1, 'Canal Direito'),
 	     (1, 'Monitor');
 
 -- Saída dos "instrumentos" para os efeitos do patch
  INSERT INTO efeito.plug_saida (id_efeito, nome) 
-      VALUES (2, 'Esquerda'),
-	     (2, 'Direita');
+      VALUES (2, 'Canal Esquerdo'),
+	     (2, 'Canal Direito');
 
 -- Tecnologia e empresa do dispositivo
 INSERT INTO efeito.tecnologia (nome, descricao)
@@ -370,7 +370,7 @@ COMMENT ON COLUMN instancia.patch.id_banco IS 'Referência para chave primária 
 COMMENT ON COLUMN instancia.patch.nome IS 'Nome representativo do patch. Deve ser curto, pois este poderá ser exibido em um display pequeno';
 
 CREATE TABLE instancia.banco (
-	id_banco int PRIMARY KEY,
+	id_banco serial PRIMARY KEY,
 	nome VARCHAR(20) NOT NULL
 );
 

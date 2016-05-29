@@ -345,7 +345,8 @@ COMMENT ON COLUMN instancia.conexao.id_plug_entrada IS 'Referência para chave p
 CREATE TABLE instancia.instancia_efeito (
 	id_instancia_efeito serial PRIMARY KEY,
 	id_efeito int NOT NULL,
-	id_patch int NOT NULL
+	id_patch int NOT NULL,
+	ativo boolean NOT NULL DEFAULT false
 );
 
 COMMENT ON TABLE instancia.instancia_efeito IS 'efeito.efeito está para "obra" como instancia.instancia_efeito está para "mídia física".
@@ -355,6 +356,7 @@ Como um efeito pode ser utilizado múltiplas vezes em uma instancia.patch e cada
 COMMENT ON COLUMN instancia.instancia_efeito.id_instancia_efeito IS 'Chave primária de instancia_efeito';
 COMMENT ON COLUMN instancia.instancia_efeito.id_efeito IS 'Referência para chave primária de efeito. Instância efeito "é do tipo" efeito';
 COMMENT ON COLUMN instancia.instancia_efeito.id_patch IS 'Referência para chave primária de patch. Patch no qual instância está contida';
+COMMENT ON COLUMN instancia.instancia_efeito.ativo IS 'Instância efeito está ativo? Ou seja, a instância deve processar o sinal que recebe nas entradas (ativo == true) ou deve simplesmente encaminhar o sinal que recebe das entradas para as saídas? (ativo == false)';
 
 CREATE TABLE instancia.patch (
 	id_patch serial PRIMARY KEY,
@@ -459,6 +461,10 @@ CREATE VIEW instancia.view_patch_detalhes AS
 -------------------------------------------------------------------------------------
 -- Triggers para instancia.conexao
 CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger AS $$
+    DECLARE
+	nome_do_efeito varchar(200);
+	id_do_efeito int;
+
     BEGIN
 	-- Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se
 	IF NOT EXISTS(
@@ -470,11 +476,15 @@ CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger 
 		 WHERE id_instancia_efeito = NEW.id_instancia_efeito_saida
 		   AND id_plug_saida = NEW.id_plug_saida
 	) THEN
-		RAISE EXCEPTION 'Plug de saída % - % não pertence ao efeito de id % no qual sua instância % pertence (instancia_efeito_saída)',
+		SELECT instancia_efeito.id_efeito INTO id_do_efeito FROM instancia.instancia_efeito WHERE id_instancia_efeito = NEW.id_instancia_efeito_saida;
+		SELECT efeito.nome INTO nome_do_efeito FROM efeito.efeito WHERE efeito.id_efeito = id_efeito;
+
+		RAISE EXCEPTION 'instancia_efeito_saída ''%'' é do efeito ''% - %''. O plug de saída ''% - %'' não pertence a esse efeito',
+				NEW.id_instancia_efeito_saida,
+				id_do_efeito,
+				nome_do_efeito,
 				NEW.id_plug_saida,
-				nome FROM efeito.plug_saida WHERE id_plug_saida = NEW.id_plug_saida,
-				id_efeito FROM instancia.instancia_efeito WHERE id_instancia_efeito = NEW.id_instancia_efeito_saida,
-				NEW.id_instancia_efeito_saida;
+				nome FROM efeito.plug_saida WHERE id_plug_saida = NEW.id_plug_saida;
 	END IF;
 
 	-- Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se
@@ -487,12 +497,15 @@ CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger 
 		 WHERE id_instancia_efeito = NEW.id_instancia_efeito_entrada
 		   AND id_plug_entrada = NEW.id_plug_entrada
 	) THEN
-		RAISE EXCEPTION 'Plug de entrada % - % não pertence ao efeito de id % no qual sua instância % pertence (instancia_efeito_entrada)',
+		SELECT instancia_efeito.id_efeito INTO id_do_efeito FROM instancia.instancia_efeito WHERE id_instancia_efeito = NEW.id_instancia_efeito_entrada;
+		SELECT efeito.nome INTO nome_do_efeito FROM efeito.efeito WHERE efeito.id_efeito = id_efeito;
+
+		RAISE EXCEPTION 'instancia_efeito_entrada ''%'' é do efeito ''% - %''. O plug de entrada ''% - %'' não pertence a esse efeito',
+				NEW.id_instancia_efeito_entrada,
+				id_do_efeito,
+				nome_do_efeito,
 				NEW.id_plug_entrada,
-				nome FROM efeito.plug_entrada WHERE id_plug_entrada = NEW.id_plug_entrada,
-				id_efeito FROM instancia.instancia_efeito WHERE id_instancia_efeito = NEW.id_instancia_efeito_entrada,
-				NEW.id_instancia_efeito_entrada;
-				
+				nome FROM efeito.plug_entrada WHERE id_plug_entrada = NEW.id_plug_entrada;
 	END IF;
 
         RETURN NEW;
@@ -510,14 +523,16 @@ COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger qu
  - Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se.';
 
 
+/*
 -- Testes
 --  1. Plug saída não pertencente ao efeito de saída
---INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
---     VALUES (10000, 1, 50, 2, 1);
---  2. Plug entrada não pertencente ao efeito de entrada
---INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
---     VALUES (10001, 1, 2, 2, 50);
+INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+     VALUES (10000, 1, 50, 2, 1);
 
+--  2. Plug entrada não pertencente ao efeito de entrada
+INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+     VALUES (10001, 1, 2, 2, 50);
+*/
 
 CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao_ciclos() RETURNS trigger AS $$
     BEGIN

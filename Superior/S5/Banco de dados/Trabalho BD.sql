@@ -37,7 +37,7 @@ COMMENT ON VIEW dicionario_dados.database IS 'Bancos de dados persistidos neste 
   
 DROP VIEW IF EXISTS dicionario_dados.schema;
 CREATE OR REPLACE VIEW dicionario_dados.schema AS
-SELECT n.nspname AS nome, pg_catalog.pg_get_userbyid(n.nspowner) AS "usuário",
+SELECT n.nspname AS nome, pg_catalog.pg_get_userbyid(n.nspowner) AS usuario,
        pg_catalog.array_to_string(n.nspacl, E'\n') AS privilegios,
        pg_catalog.obj_description(n.oid, 'pg_namespace') AS comentario
 
@@ -79,8 +79,8 @@ CREATE OR REPLACE VIEW dicionario_dados.atributo AS
 
 -- http://blog.delogic.com.br/criar-dicionario-de-dados-em-postgres/
 SELECT nsp.nspname AS "schema",
-       tbl.relname AS Tabela,
-       atr.attname AS Coluna,
+       tbl.relname AS relacao,
+       atr.attname AS atributo,
        pg_catalog.format_type(atr.atttypid,atr.atttypmod) AS Tipo,
 
        CASE WHEN (atr.atttypmod > 0)
@@ -122,10 +122,26 @@ SELECT nsp.nspname AS "schema",
  WHERE tbl.relkind = 'r'::char
    AND nsp.nspname IN (SELECT nome FROM dicionario_dados.schema)
    AND atr.attnum > 0
- order by "schema", Tabela, atr.attnum /* Número da coluna*/, Coluna, Chave_Primaria desc, Chave_Estrangeira desc;
+ order by "schema", relacao, atr.attnum /* Número da coluna*/, atributo, Chave_Primaria desc, Chave_Estrangeira desc;
 
 
 COMMENT ON VIEW dicionario_dados.atributo IS 'Dispõe metadados importante de atributos';
+
+
+DROP view IF EXISTS dicionario_dados.trigger;
+CREATE OR REPLACE VIEW dicionario_dados.trigger AS
+
+SELECT nsp.nspname as "schema", relname as relacao, tgname AS nome, description AS comentario, proname as nome_funcao
+  FROM pg_description 
+RIGHT JOIN pg_trigger on pg_description.objoid = pg_trigger.oid
+  JOIN pg_class on (tgrelid=pg_class.oid)
+  JOIN pg_proc on (tgfoid=pg_proc.oid)
+  LEFT JOIN pg_namespace nsp ON nsp.oid = pg_class.relnamespace
+ WHERE tgisinternal = false
+ ORDER BY nome;
+
+COMMENT ON VIEW dicionario_dados.trigger IS 'Dispõe metadados importante de triggers';
+
 -------------------------------------------------------------------------------------
 -- Esquema efeito
 -------------------------------------------------------------------------------------
@@ -152,8 +168,8 @@ CREATE TABLE efeito.efeito (
 COMMENT ON TABLE efeito.efeito IS 'Efeitos são plugins que simulam "pedais" (de guitarra, de baixo...), "amplificadores", "sintetizadores" - dentre outros equipamentos - cujo intuito é melhorar (corrigir), modificar e (ou) incrementar o áudio obtido externamente (por uma interface de áudio) ou internamente (por um efeito anterior).
 O produto (áudio processado) poderá ser utilizado externamente (sendo disposto em uma interface de áudio) ou internamente (por um efeito posterior ou gravação de áudio)
 
- - Para conexões entre efeitos, visite instancia.conexao;
- - Para representação de interface de áudio, visite efeito.';
+ * Para conexões entre efeitos, visite instancia.conexao;
+ * Para representação de interface de áudio, visite efeito.';
 
 COMMENT ON COLUMN efeito.efeito.id_efeito IS 'Chave primária de efeito';
 COMMENT ON COLUMN efeito.efeito.nome IS 'Nome do efeito';
@@ -228,7 +244,7 @@ CREATE TABLE efeito.plug_entrada (
 COMMENT ON TABLE efeito.plug_entrada IS 'Um plug é a porta de entrada ou de saída do áudio. Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. 
 Um plug de entrada permite que um sinal que chega seja processado pelo efeito. Um simples exemplo é: Saída da guitarra **entra** na caixa de som.
 
- - Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
+ * Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
 
 COMMENT ON COLUMN efeito.plug_entrada.id_plug_entrada IS 'Chave primária de plug_entrada';
 COMMENT ON COLUMN efeito.plug_entrada.id_efeito IS 'Referência para chave primária de efeito';
@@ -243,7 +259,7 @@ CREATE TABLE efeito.plug_saida (
 COMMENT ON TABLE efeito.plug_saida IS 'Um plug é a porta de entrada ou de saída do áudio. Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. 
 Um plug de saída permite o uso por outro efeito de um sinal processado do efeito com o plug de saída utilizado. Um simples exemplo é: **Saída** da guitarra entra na caixa de som.
 
- - Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
+ * Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
 
 COMMENT ON COLUMN efeito.plug_saida.id_plug_saida IS 'Chave primária de plug_saida';
 COMMENT ON COLUMN efeito.plug_saida.id_efeito IS 'Referência para chave primária de efeito';
@@ -274,8 +290,8 @@ Esta tabela enumera os possíveis parâmetros de um efeito, bem como o estado po
 
 Note entretanto que uma tupla não contém o valor (estado atual) de um parâmetro para um efeito, pois este trabalho fora direcionado para instancia.configuracao_efeito_parametro.
 
- - Para detalhes sobre como definir um valor a um parâmetro, visite instancia.configuracao_efeito_parametro;
- - Para detalhes sobre o que é uma instância de um efeito, visite instancia.instancia_efeito.';
+ * Para detalhes sobre como definir um valor a um parâmetro, visite instancia.configuracao_efeito_parametro;
+ * Para detalhes sobre o que é uma instância de um efeito, visite instancia.instancia_efeito.';
 
 
 COMMENT ON COLUMN efeito.parametro.id_parametro IS 'Chave primária de parametro';
@@ -408,6 +424,7 @@ CREATE TABLE instancia.banco (
 COMMENT ON TABLE instancia.banco IS 'Um banco serve como agrupador de patchs.
 
 Usuários costumam utilizar bancos como forma de agrupar um conjunto de patchs para determinada situação. Ex:
+
  * Banco "Rock" contendo patchs para músicas clássicas do rock;
  * Banco "Show dia dd/mm/yyyy" contendo patchs que serão utilizados em determinado show
  * Banco "Artista Tal" contendo patchs criados pelo próprio artista como forma que querer agradar seu nicho de fãs';
@@ -452,12 +469,6 @@ ALTER TABLE instancia.patch ADD FOREIGN KEY (id_banco) REFERENCES instancia.banc
 
 ALTER TABLE instancia.configuracao_efeito_parametro ADD FOREIGN KEY (id_instancia_efeito) REFERENCES instancia.instancia_efeito (id_instancia_efeito);
 ALTER TABLE instancia.configuracao_efeito_parametro ADD FOREIGN KEY (id_parametro) REFERENCES efeito.parametro (id_parametro);
-
-------------------------------------------
--- SEQUENCES
-------------------------------------------
-
-CREATE SEQUENCE instancia.sequence_configuracao_efeito_parametro START 1;
 
 -------------------------------------------------------------------------------------
 -- Visões
@@ -548,9 +559,8 @@ AFTER INSERT OR UPDATE ON instancia.conexao
 
 COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
 
- - Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se;
- - Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se.';
-
+ * Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se;
+ * Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se.';
 
 /*
 -- Testes
@@ -558,9 +568,17 @@ COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger qu
 INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
      VALUES (10000, 1, 50, 2, 1);
 
+UPDATE instancia.conexao 
+   set id_instancia_efeito_saida=1, id_plug_saida=50, id_instancia_efeito_entrada=2, id_plug_entrada=1
+ where id_conexao = 1;
+
 --  2. Plug entrada não pertencente ao efeito de entrada
 INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
      VALUES (10001, 1, 2, 2, 50);
+
+UPDATE instancia.conexao 
+   SET id_instancia_efeito_saida=1, id_plug_saida=2, id_instancia_efeito_entrada=2, id_plug_entrada=50 
+ WHERE id_conexao = 1; 
 */
 
 CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao_ciclos() RETURNS trigger AS $$
@@ -608,7 +626,7 @@ AFTER INSERT OR UPDATE ON instancia.conexao
 
 COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger que verifica as seguintes restrições para INSERT OR UPDATE em instancia.conexao:
 
- - Não deve haver ciclos no nível de instancia_efeito.
+ * Não deve haver ciclos no nível de instancia_efeito.
 
 Seguem exemplos. A, B, C e D são exemplos de instancia.instancia_efeito:
 
@@ -624,31 +642,65 @@ Seguem exemplos. A, B, C e D são exemplos de instancia.instancia_efeito:
 --            (10002, 3, 6, 4, 64),
 --            (10003, 3, 6, 1,  1); -- Loop
 
+
 -- Triggers para instancia.instancia_efeito
--- Descrição: Para uma instancia_efeito criada, serão gerados configuracao_efeito_parametro
---            para cada parâmetro do efeito da instância.
---            O valor será o efeito.parametro.valor_padrao
 CREATE OR REPLACE FUNCTION instancia.funcao_gerar_configuracao_efeito_parametro() RETURNS trigger AS $$
     BEGIN
-	INSERT INTO instancia.configuracao_efeito_parametro
+	IF (TG_OP = 'DELETE' OR TG_OP = 'UPDATE') THEN
+		DELETE FROM instancia.configuracao_efeito_parametro WHERE id_instancia_efeito = OLD.id_instancia_efeito;
+	END IF;
 
-	SELECT nextval('instancia.sequence_configuracao_efeito_parametro') AS id_configuracao_efeito_parametro, NEW.id_instancia_efeito, id_parametro, valor_padrao AS valor
-	  FROM efeito.parametro
-	 WHERE id_efeito = NEW.id_efeito;
+	IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+		INSERT INTO instancia.configuracao_efeito_parametro (id_instancia_efeito, id_parametro, valor)
 
-        RETURN NEW;
+		SELECT NEW.id_instancia_efeito, id_parametro, valor_padrao AS valor
+		  FROM efeito.parametro
+		 WHERE id_efeito = NEW.id_efeito;
+	END IF;
+
+	RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER trigger_gerar_configuracao_efeito_parametro
-AFTER INSERT ON instancia.instancia_efeito
+AFTER INSERT OR UPDATE OR DELETE ON instancia.instancia_efeito
    FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_gerar_configuracao_efeito_parametro();
 
-COMMENT ON TRIGGER trigger_gerar_configuracao_efeito_parametro ON instancia.instancia_efeito IS 'Trigger que verifica as seguintes restrições para INSERT em instancia.instancia_efeito:
-Para uma instancia_efeito criada, serão gerados automaticamente instancia.configuracao_efeito_parametro para cada parâmetro do efeito da instância.
-O valor será o efeito.parametro.valor_padrao';
- 
+COMMENT ON TRIGGER trigger_gerar_configuracao_efeito_parametro ON instancia.instancia_efeito IS 'Trigger que verifica as seguintes restrições para INSERT, UPDATE ou DELETE em instancia.instancia_efeito:
+
+ * Para uma instancia_efeito criada, serão inseridos automaticamente instancia.configuracao_efeito_parametro para cada parâmetro do efeito da instância.
+   O valor será o efeito.parametro.valor_padrao;
+ * Para uma instancia_efeito alterada ou excluída, serão alterados ou excluidos automaticamente instancia.configuracao_efeito_parametro para cada parâmetro do efeito da instância.
+   O valor será o efeito.parametro.valor_padrao.
+';
+
+-- Exemplos
+/*
+-- 1. INSERIR
+INSERT INTO instancia.instancia_efeito (id_instancia_efeito, id_efeito, id_patch)
+     VALUES (10000, 300, 1);
+SELECT COUNT(*), COUNT(*) > 0 FROM instancia.configuracao_efeito_parametro WHERE id_instancia_efeito = 10000
+
+-- 2. ATUALIZAR
+UPDATE instancia.instancia_efeito
+   SET id_efeito = 310
+ WHERE id_instancia_efeito = 10000;
+
+SELECT COUNT(*), COUNT(*) > 0 FROM instancia.configuracao_efeito_parametro WHERE id_instancia_efeito = 10000;
+
+SELECT * FROM instancia.configuracao_efeito_parametro
+  JOIN efeito.parametro USING (id_parametro)
+ WHERE id_instancia_efeito = 10000
+   AND id_efeito != 310;
+
+-- 3. DELETAR
+DELETE FROM instancia.configuracao_efeito_parametro
+ WHERE id_instancia_efeito = 10000;
+
+SELECT COUNT(*), COUNT(*) = 0 FROM instancia.configuracao_efeito_parametro WHERE id_instancia_efeito = 10000
+*/
+     
 -- Detalhes dos valores dos parâmetros dos efeitos de um patch
 /*
 SELECT id_patch || ' - ' || patch.nome AS patch, id_efeito, id_instancia_efeito, id_parametro, efeito.nome || ': ' || parametro.nome AS parametro, configuracao_efeito_parametro.valor AS valor_atual, valor_padrao || ' [' ||minimo || ', ' || maximo || ']' AS valor_padrao
@@ -681,6 +733,7 @@ CREATE OR REPLACE FUNCTION instancia.funcao_atualizar_valor_instancia_efeito_par
     END;
 $$ LANGUAGE plpgsql;
 
+
 CREATE TRIGGER trigger_atualizar_valor_instancia_efeito_parametro
 AFTER UPDATE ON instancia.configuracao_efeito_parametro
    FOR EACH ROW EXECUTE PROCEDURE instancia.funcao_atualizar_valor_instancia_efeito_parametro();
@@ -689,15 +742,13 @@ COMMENT ON TRIGGER trigger_atualizar_valor_instancia_efeito_parametro ON instanc
 
 Valor de um parâmetro (instancia.configuracao_efeito_parametro.valor) deve estar entre o mínimo e o máximo do parâmetro correspondente ([efeito.parametro.minimo, efeito.parametro.maximo])';
 
--- Menor
 /*
+-- 1 - Menor
 UPDATE instancia.configuracao_efeito_parametro
  SET valor = -5000
   WHERE id_configuracao_efeito_parametro = 1;
-*/
 
--- Maior
-/*
+-- 2 - Maior
 UPDATE instancia.configuracao_efeito_parametro
  SET valor = 5000
   WHERE id_configuracao_efeito_parametro = 1;
@@ -720,16 +771,8 @@ SELECT * FROM efeito.view_efeito_descricao
 SELECT * FROM instancia.view_patch_detalhes;
 
 
--- Parametros de um efeito
-SELECT view_efeito_descricao.id_efeito, view_efeito_descricao.nome, view_efeito_descricao.empresa, 
-       efeito.parametro.*, view_efeito_descricao.tecnologia AS efeito_tecnologia
-
-  FROM efeito.view_efeito_descricao
-  JOIN efeito.parametro USING (id_efeito)
-
- WHERE id_efeito = 100;
-
 SELECT * FROM dicionario_dados.database;
 SELECT * FROM dicionario_dados.atributo;
 SELECT * FROM dicionario_dados.schema;
+SELECT * FROM dicionario_dados.trigger;
 SELECT * FROM dicionario_dados.relacao;

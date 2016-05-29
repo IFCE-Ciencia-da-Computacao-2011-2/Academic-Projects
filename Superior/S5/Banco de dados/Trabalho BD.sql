@@ -318,7 +318,7 @@ VALUES ('LV²', 'LV2 is an open standard for audio plugins, used by hundreds of 
 -- Conexão
 ------------------------------------------
 CREATE TABLE instancia.conexao (
-	id_conexao int PRIMARY KEY,
+	id_conexao serial PRIMARY KEY,
 
 	id_instancia_efeito_saida int NOT NULL,
 	id_plug_saida int NOT NULL,
@@ -343,7 +343,7 @@ COMMENT ON COLUMN instancia.conexao.id_plug_entrada IS 'Referência para chave p
 -- Instância, Patchs e Bancos
 ------------------------------------------
 CREATE TABLE instancia.instancia_efeito (
-	id_instancia_efeito int PRIMARY KEY,
+	id_instancia_efeito serial PRIMARY KEY,
 	id_efeito int NOT NULL,
 	id_patch int NOT NULL
 );
@@ -357,12 +357,9 @@ COMMENT ON COLUMN instancia.instancia_efeito.id_efeito IS 'Referência para chav
 COMMENT ON COLUMN instancia.instancia_efeito.id_patch IS 'Referência para chave primária de patch. Patch no qual instância está contida';
 
 CREATE TABLE instancia.patch (
-	id_patch int PRIMARY KEY,
+	id_patch serial PRIMARY KEY,
 	id_banco int NOT NULL,
-	nome VARCHAR(20) NOT NULL,
-	posicao int CHECK (posicao >= 0) NOT NULL,
-
-	UNIQUE (id_banco, posicao)
+	nome VARCHAR(20) NOT NULL
 );
 
 
@@ -371,14 +368,10 @@ COMMENT ON TABLE instancia.patch IS 'Um patch representa uma configuração de u
 COMMENT ON COLUMN instancia.patch.id_patch IS 'Chave primária de patch';
 COMMENT ON COLUMN instancia.patch.id_banco IS 'Referência para chave primária de banco. Banco no qual o Patch pertence';
 COMMENT ON COLUMN instancia.patch.nome IS 'Nome representativo do patch. Deve ser curto, pois este poderá ser exibido em um display pequeno';
---COMMENT ON COLUMN instancia.patch.posicao IS 'Posição de acesso para o patch'; -- Não sei se irei por
 
 CREATE TABLE instancia.banco (
 	id_banco int PRIMARY KEY,
-	nome VARCHAR(20) NOT NULL,
-	posicao int CHECK (posicao >= 0) NOT NULL,
-
-	UNIQUE (posicao)
+	nome VARCHAR(20) NOT NULL
 );
 
 COMMENT ON TABLE instancia.banco IS 'Um banco serve como agrupador de patchs.
@@ -390,13 +383,12 @@ Usuários costumam utilizar bancos como forma de agrupar um conjunto de patchs p
 
 COMMENT ON COLUMN instancia.banco.id_banco IS 'Chave primária de banco';
 COMMENT ON COLUMN instancia.banco.nome IS 'Nome representativo do banco. Deve ser curto, pois este poderá ser exibido em um display pequeno';
---COMMENT ON COLUMN instancia.banco.posicao IS 'Posição de acesso para o banco'; -- Não sei se irei por
 
 ------------------------------------------
 -- Configuração e parâmetros
 ------------------------------------------
 CREATE TABLE instancia.configuracao_efeito_parametro (
-	id_configuracao_efeito_parametro int PRIMARY KEY,
+	id_configuracao_efeito_parametro serial PRIMARY KEY,
 	id_instancia_efeito int NOT NULL,
 	id_parametro int NOT NULL,
 	valor float NOT NULL,
@@ -447,7 +439,7 @@ CREATE VIEW efeito.view_efeito_descricao AS
 
 CREATE VIEW instancia.view_patch_detalhes AS
 	SELECT id_patch, id_banco,
-	       instancia.banco.posicao || ' - ' || instancia.banco.nome || ': ' || instancia.patch.posicao || ' - ' || instancia.patch.nome AS patch_nome, 
+	       instancia.banco.nome || ': ' || instancia.patch.nome AS patch_nome, 
 	       instancia.instancia_efeito.id_instancia_efeito,
 	       efeito.view_efeito_descricao.id_efeito,
 	       efeito.view_efeito_descricao.nome AS efeito_nome, 
@@ -460,7 +452,7 @@ CREATE VIEW instancia.view_patch_detalhes AS
 	  JOIN instancia.banco USING (id_banco)
 	  JOIN efeito.view_efeito_descricao USING (id_efeito)
 
-	ORDER BY banco.posicao, patch.posicao, id_instancia_efeito;
+	ORDER BY id_instancia_efeito;
 
 -------------------------------------------------------------------------------------
 -- Triggers

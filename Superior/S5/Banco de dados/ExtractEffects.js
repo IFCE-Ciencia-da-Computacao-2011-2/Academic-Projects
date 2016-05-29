@@ -22,7 +22,7 @@ class Efeito {
     	efeito.nome = effect.name;
         efeito.descricao = effect.comment.replace(new RegExp("'", 'g'), "''").replace("\n", "");
     	efeito.identificador = effect.uri;
-    	efeito.id_tecnologia = id%4 + 1;
+    	efeito.id_tecnologia = id%4 + 2; // Primeira tecnologia é PedalPi
 
         efeito.empresa = this.empresa(effect);
         efeito.plugs = this.plugs(id, effect.ports);
@@ -33,12 +33,12 @@ class Efeito {
     }
 
     plugs(id_efeito, ports) {
-        let plugs = [];
+        let plugs = {"entrada":[], "saida":[]};
 
         for (let input of ports.audio.input)
-            plugs.push({id_efeito : id_efeito, tipo : 1, nome : input.name});
+            plugs.entrada.push({id_efeito : id_efeito, nome : input.name});
         for (let input of ports.audio.output)
-            plugs.push({id_efeito : id_efeito, tipo : 2, nome : input.name});
+            plugs.saida.push({id_efeito : id_efeito, nome : input.name});
 
         return plugs;
     }
@@ -47,6 +47,9 @@ class Efeito {
         let parametros = [];
 
         for (let input of ports.control.input) {
+            if (input.ranges.minimum > input.ranges.default || input.ranges.maximum < input.ranges.default)
+                continue;
+
             let data = {id_efeito : id_efeito, nome : input.name, minimo : input.ranges.minimum, maximo : input.ranges.maximum, valor_padrao : input.ranges.default};
             data.nome = data.nome.replace(new RegExp("'", 'g'), "''").replace("\n", "");
             parametros.push(data);
@@ -90,17 +93,18 @@ class Categorias {
     indexOf(categoria) {
         let index = this.categorias.indexOf(categoria);
 
-        return index == -1 ? index : index + 1;
+        let inicio = 3;
+        return index == -1 ? index : index + inicio;
     }
 
     print() {
         let data = "";
-        data += ` INSERT INTO efeito.categoria (id_categoria, nome) \n`;
+        data += ` INSERT INTO efeito.categoria (nome) \n`;
         data += `      VALUES \n`;
 
         let id = 1;
         for (let categoria of this.categorias) {
-            data += `             (${id}, '${categoria}')`;
+            data += `             ('${categoria}')`;
             data += id == this.categorias.length ? ';\n' : ',\n';
             id++;
         }
@@ -113,20 +117,18 @@ class Empresas {
     constructor(data) {
         this.empresas = [];
 
+        let inicio = 2;
         for (let effect of data) {
-            let empresa = {nome: effect.brand, site: effect.author.homepage};
+            let empresa = {id: this.empresas.length + inicio, nome: effect.brand, site: effect.author.homepage};
             if (this.indexOf(empresa.nome) == -1)
                 this.empresas.push(empresa);
         }
     }
 
     indexOf(nome) {
-        let index = 1;
-
         for (let empresa of this.empresas) {
             if (empresa.nome == nome)
-                return index;
-            index++;
+                return empresa.id;
         }
 
         return -1;
@@ -134,12 +136,12 @@ class Empresas {
 
     print() {
         let data = "";
-        data += ` INSERT INTO efeito.empresa (id_empresa, nome, site) \n`;
+        data += ` INSERT INTO efeito.empresa (nome, site) \n`;
         data += `      VALUES \n`;
 
         let id = 1;
         for (let empresa of this.empresas) {
-            data += `             (${id}, '${empresa.nome}', '${empresa.site}')`;
+            data += `             ('${empresa.nome}', '${empresa.site}')`;
             data += id == this.empresas.length ? ';\n' : ',\n';
             id++;
         }
@@ -158,7 +160,7 @@ class Print {
         let i = -1;
         for (let effect of effects) {
             i++;
-            this.efeitos.push(new Efeito(effects[i], this.categorias, this.empresas).prepare(i+1));
+            this.efeitos.push(new Efeito(effects[i], this.categorias, this.empresas).prepare(i+1 + 2)); // + 2 pq já tem 2 efeitos padrão
         }
     }
 
@@ -171,14 +173,14 @@ class Print {
         data += this.categorias.print();
         data += '\n';
 
+
         data += this.printData(this.effectHeader, effect => this.effect(effect));
         data += this.printDataTipo2(this.categoryHeader, effect => this.category(effect));
 
-        this.id_parametro = 1;
         data += this.printDataTipo2(this.parametrosCabecalho, effect => this.parametros(effect));
-        this.id_plug_tipo_entrada = 1;
-        this.id_plug_tipo_saida = 1;
-        data += this.printDataTipo2(this.plugsCabecalho, effect => this.plugs(effect));
+
+        data += this.printDataTipo2(this.plugsEntradaCabecalho, effect => this.plugsEntrada(effect));
+        data += this.printDataTipo2(this.plugsSaidaCabecalho, effect => this.plugsSaida(effect));
 
         return data;
     }
@@ -214,14 +216,14 @@ class Print {
 
     effectHeader() {
         let data = "";
-        data += ` INSERT INTO efeito.efeito (id_efeito, nome, descricao, identificador, id_empresa, id_tecnologia) \n`;
+        data += ` INSERT INTO efeito.efeito (nome, descricao, identificador, id_empresa, id_tecnologia) \n`;
         data += `      VALUES \n`;
 
         return data;
     }
 
     effect(effect) {
-    	return `(${effect.id}, '${effect.nome}', '${effect.descricao}', '${effect.identificador}', ${effect.empresa}, ${effect.id_tecnologia})`;
+    	return `('${effect.nome}', '${effect.descricao}', '${effect.identificador}', ${effect.empresa}, ${effect.id_tecnologia})`;
     }
 
     categoryHeader() {
@@ -242,7 +244,7 @@ class Print {
 
     parametrosCabecalho(effect) {
         let data = "";
-        data += ` INSERT INTO efeito.parametro (id_parametro, id_efeito, nome, minimo, maximo, valor_padrao) \n`;
+        data += ` INSERT INTO efeito.parametro (id_efeito, nome, minimo, maximo, valor_padrao) \n`;
         data += `      VALUES \n`;
 
         return data;
@@ -251,25 +253,39 @@ class Print {
     parametros(efeito) {
         let data = [];
         for (let parametro of efeito.parametros)
-            data.push(`(${this.id_parametro++}, ${parametro.id_efeito}, '${parametro.nome}', ${parametro.minimo}, ${parametro.maximo}, ${parametro.valor_padrao})`);
+            data.push(`(${parametro.id_efeito}, '${parametro.nome}', ${parametro.minimo}, ${parametro.maximo}, ${parametro.valor_padrao})`);
 
         return data;
     }
 
-    plugsCabecalho() {
+    plugsEntradaCabecalho() {
         let data = "";
-        data += ` INSERT INTO efeito.plug (id_plug, id_tipo_plug, id_efeito, nome) \n`;
+        data += ` INSERT INTO efeito.plug_entrada (id_efeito, nome) \n`;
         data += `      VALUES \n`;
 
         return data;
     }
 
-    plugs(efeito) {
+    plugsEntrada(efeito) {
         let data = [];
-        for (let plug of efeito.plugs) {
-            let id = plug.tipo == 1 ? this.id_plug_tipo_entrada++ : this.id_plug_tipo_saida++;
-            data.push(`(${id}, ${plug.tipo}, ${plug.id_efeito}, '${plug.nome}')`);
-        }
+        for (let plug of efeito.plugs.entrada)
+            data.push(`(${plug.id_efeito}, '${plug.nome}')`);
+
+        return data;
+    }
+
+    plugsSaidaCabecalho() {
+        let data = "";
+        data += ` INSERT INTO efeito.plug_saida (id_efeito, nome) \n`;
+        data += `      VALUES \n`;
+
+        return data;
+    }
+
+    plugsSaida(efeito) {
+        let data = [];
+        for (let plug of efeito.plugs.saida)
+            data.push(`(${plug.id_efeito}, '${plug.nome}')`);
 
         return data;
     }

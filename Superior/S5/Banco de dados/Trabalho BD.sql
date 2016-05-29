@@ -112,7 +112,7 @@ COMMENT ON DOMAIN efeito.Site IS 'Endereço eletrônico';
 -- Efeito
 ------------------------------------------
 CREATE TABLE efeito.efeito (
-	id_efeito int PRIMARY KEY,
+	id_efeito serial PRIMARY KEY,
 	nome varchar(100) NOT NULL,
 	descricao text,
 	identificador efeito.Site UNIQUE NOT NULL,
@@ -137,7 +137,7 @@ COMMENT ON COLUMN efeito.efeito.id_tecnologia IS 'Referência para chave primár
 -- Tecnologia e empresa do dispositivo
 ------------------------------------------
 CREATE TABLE efeito.empresa (
-	id_empresa int PRIMARY KEY,
+	id_empresa serial PRIMARY KEY,
 	nome varchar(50) NOT NULL,
 	site efeito.Site NOT NULL
 );
@@ -149,7 +149,7 @@ COMMENT ON COLUMN efeito.empresa.nome IS 'Nome da empresa';
 COMMENT ON COLUMN efeito.empresa.site IS 'Site - dado pela própria empresa - no qual o usuário poderá encontrar informações dos produtos da desta';
 
 CREATE TABLE efeito.tecnologia (
-	id_tecnologia int PRIMARY KEY,
+	id_tecnologia serial PRIMARY KEY,
 	nome varchar(50) NOT NULL,
 	descricao text NOT NULL
 );
@@ -165,7 +165,7 @@ COMMENT ON COLUMN efeito.tecnologia.descricao IS 'Descrição da tecnologia, con
 ------------------------------------------
 
 CREATE TABLE efeito.categoria (
-	id_categoria int PRIMARY KEY,
+	id_categoria serial PRIMARY KEY,
 	nome varchar(50) NOT NULL
 );
 
@@ -191,7 +191,7 @@ COMMENT ON COLUMN efeito.categoria_efeito.id_efeito IS 'Referência para chave p
 -- Plugs
 ------------------------------------------
 CREATE TABLE efeito.plug_entrada (
-	id_plug_entrada int PRIMARY KEY,
+	id_plug_entrada serial PRIMARY KEY,
 	id_efeito int NOT NULL,
 	nome varchar(50) NOT NULL
 );
@@ -206,7 +206,7 @@ COMMENT ON COLUMN efeito.plug_entrada.id_efeito IS 'Referência para chave prim�
 COMMENT ON COLUMN efeito.plug_entrada.nome IS 'Nome do plug';
 
 CREATE TABLE efeito.plug_saida (
-	id_plug_saida int PRIMARY KEY,
+	id_plug_saida serial PRIMARY KEY,
 	id_efeito int NOT NULL,
 	nome varchar(50) NOT NULL
 );
@@ -224,7 +224,7 @@ COMMENT ON COLUMN efeito.plug_saida.nome IS 'Nome do plug';
 -- Parametro
 ------------------------------------------
 CREATE TABLE efeito.parametro (
-	id_parametro int PRIMARY KEY,
+	id_parametro serial PRIMARY KEY,
 	id_efeito int NOT NULL,	
 	nome varchar(50) NOT NULL,
 
@@ -275,42 +275,41 @@ ALTER TABLE efeito.parametro ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeit
 -- Popular dados BASE
 ------------------------------------------
 -- Dados referentes ao Hardware 
+INSERT INTO efeito.tecnologia (nome, descricao)
+     VALUES ('PedalPi', 'Tecnologia utilizada nas configurações referentes ao hardware do PedalPi');
 
-INSERT INTO efeito.tecnologia (id_tecnologia, nome, descricao)
-     VALUES (1, 'PedalPi', 'Tecnologia utilizada nas configurações referentes ao hardware do PedalPi');
+INSERT INTO efeito.categoria (nome) 
+     VALUES ('System INPUT'),
+            ('System OUTPUT');
 
-INSERT INTO efeito.categoria (id_categoria, nome) 
-     VALUES (1, 'System INPUT'),
-            (2, 'System OUTPUT');
+ INSERT INTO efeito.empresa (nome, site)
+      VALUES ('PedalController', 'http://PedalController.github.io/');
 
- INSERT INTO efeito.empresa (id_empresa, nome, site)
-      VALUES (1, 'PedalController', 'http://PedalController.github.io/');
-
- INSERT INTO efeito.efeito (id_efeito, id_empresa, id_tecnologia, nome, descricao, identificador) 
-      VALUES (1, 1, 1, 'Placa de áudio - ENTRADA', 'O sinal de instrumentos ligados ao equipamento será acessível por meio desse efeito', 'http://SrMouraSilva.github.io/Instrumentos'),
-	     (2, 1, 1, 'Placa de áudio - SAÍDA', 'Saída de efeitos ligados aqui serão enviados para as saidas do equipamento, que serão utilizadas possivelmente em caixas de som', 'http://SrMouraSilva.github.io/Caixas');
+ INSERT INTO efeito.efeito (id_empresa, id_tecnologia, nome, descricao, identificador) 
+      VALUES (1, 1, 'Placa de áudio - ENTRADA', 'O sinal de instrumentos ligados ao equipamento será acessível por meio desse efeito', 'http://SrMouraSilva.github.io/Instrumentos'),
+	     (1, 1, 'Placa de áudio - SAÍDA', 'Saída de efeitos ligados aqui serão enviados para as saidas do equipamento, que serão utilizadas possivelmente em caixas de som', 'http://SrMouraSilva.github.io/Caixas');
 
  INSERT INTO efeito.categoria_efeito (id_categoria, id_efeito) 
       VALUES (1, 1),
 	     (2, 2);
 
 -- Saída dos efeitos do patch para as entrada das "caixas de som"
- INSERT INTO efeito.plug_entrada (id_plug_entrada, id_efeito, nome) 
-      VALUES (1, 1, 'Esquerda'),
-	     (2, 1, 'Direita'),
-	     (3, 1, 'Monitor');
+ INSERT INTO efeito.plug_entrada (id_efeito, nome) 
+      VALUES (1, 'Esquerda'),
+	     (1, 'Direita'),
+	     (1, 'Monitor');
 
 -- Saída dos "instrumentos" para os efeitos do patch
- INSERT INTO efeito.plug_saida (id_plug_saida, id_efeito, nome) 
-      VALUES (1, 2, 'Esquerda'),
-	     (2, 2, 'Direita');
+ INSERT INTO efeito.plug_saida (id_efeito, nome) 
+      VALUES (2, 'Esquerda'),
+	     (2, 'Direita');
 
 -- Tecnologia e empresa do dispositivo
-INSERT INTO efeito.tecnologia (id_tecnologia, nome, descricao)
-VALUES (2, 'LV²', 'LV2 is an open standard for audio plugins, used by hundreds of plugins and other projects. At its core, LV2 is a simple stable interface, accompanied by extensions which add functionality to support the needs of increasingly powerful audio software'),
-       (3, 'LADSPA', 'LADSPA is an acronym for Linux Audio Developer"s Simple Plugin Aefeito. It is an application programming interface (Aefeito) standard for handling audio filters and audio signal processing effects, licensed under the GNU Lesser General Public License (LGPL)'),
-       (4, 'VST', 'Virtual Studio Technology (VST) is a software interface that integrates software audio synthesizer and effect plugins with audio editors and recording systems. VST and similar technologies use digital signal processing to simulate traditional recording studio hardware in software. Thousands of plugins exist, both commercial and freeware, and a large number of audio applications support VST under license from its creator, Steinberg.'),
-       (5, 'AU', 'Audio Units (AU) are a system-level plug-in architecture provided by Core Audio in the operating system OS X, iOS developed by Apple. Audio Units are a set of application programming interface (API) services provided by the operating system to generate, process, receive, or otherwise manipulate streams of audio in near-real-time with minimal latency.');
+INSERT INTO efeito.tecnologia (nome, descricao)
+VALUES ('LV²', 'LV2 is an open standard for audio plugins, used by hundreds of plugins and other projects. At its core, LV2 is a simple stable interface, accompanied by extensions which add functionality to support the needs of increasingly powerful audio software'),
+       ('LADSPA', 'LADSPA is an acronym for Linux Audio Developer"s Simple Plugin Aefeito. It is an application programming interface (Aefeito) standard for handling audio filters and audio signal processing effects, licensed under the GNU Lesser General Public License (LGPL)'),
+       ('VST', 'Virtual Studio Technology (VST) is a software interface that integrates software audio synthesizer and effect plugins with audio editors and recording systems. VST and similar technologies use digital signal processing to simulate traditional recording studio hardware in software. Thousands of plugins exist, both commercial and freeware, and a large number of audio applications support VST under license from its creator, Steinberg.'),
+       ('AU', 'Audio Units (AU) are a system-level plug-in architecture provided by Core Audio in the operating system OS X, iOS developed by Apple. Audio Units are a set of application programming interface (API) services provided by the operating system to generate, process, receive, or otherwise manipulate streams of audio in near-real-time with minimal latency.');
 
 -------------------------------------------------------------------------------------
 -- Esquema instancia

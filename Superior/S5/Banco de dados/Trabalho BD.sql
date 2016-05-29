@@ -208,10 +208,10 @@ COMMENT ON COLUMN efeito.tecnologia.descricao IS 'Descrição da tecnologia, con
 ------------------------------------------
 -- Categorias de efeitos
 ------------------------------------------
-
 CREATE TABLE efeito.categoria (
 	id_categoria serial PRIMARY KEY,
-	nome varchar(50) NOT NULL
+	nome varchar(50) NOT NULL,
+	restritiva boolean NOT NULL default FALSE
 );
 
 COMMENT ON TABLE efeito.categoria IS 'Categoria no qual um efeito pode se enquadrar.
@@ -323,9 +323,9 @@ ALTER TABLE efeito.parametro ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeit
 INSERT INTO efeito.tecnologia (nome, descricao)
      VALUES ('PedalPi', 'Tecnologia utilizada nas configurações referentes ao hardware do PedalPi');
 
-INSERT INTO efeito.categoria (nome) 
-     VALUES ('System INPUT'),
-            ('System OUTPUT');
+INSERT INTO efeito.categoria (nome, restritiva) 
+     VALUES ('System OUTPUT', true),
+            ('System INPUT', true);
 
  INSERT INTO efeito.empresa (nome, site)
       VALUES ('PedalController', 'http://PedalController.github.io/');
@@ -699,20 +699,6 @@ DELETE FROM instancia.configuracao_efeito_parametro
  WHERE id_instancia_efeito = 10000;
 
 SELECT COUNT(*), COUNT(*) = 0 FROM instancia.configuracao_efeito_parametro WHERE id_instancia_efeito = 10000
-*/
-     
--- Detalhes dos valores dos parâmetros dos efeitos de um patch
-/*
-SELECT id_patch || ' - ' || patch.nome AS patch, id_efeito, id_instancia_efeito, id_parametro, efeito.nome || ': ' || parametro.nome AS parametro, configuracao_efeito_parametro.valor AS valor_atual, valor_padrao || ' [' ||minimo || ', ' || maximo || ']' AS valor_padrao
-  FROM instancia.patch
-  JOIN instancia.instancia_efeito USING (id_patch)
-  JOIN efeito.efeito USING (id_efeito)
-  JOIN efeito.parametro USING (id_efeito)
-  JOIN instancia.configuracao_efeito_parametro USING (id_instancia_efeito, id_parametro)
-
- WHERE id_patch = 1
-
- ORDER BY id_patch, id_efeito, id_instancia_efeito, id_parametro
 */
 
 -- Valor de um parâmetro (instancia.configuracao_efeito_parametro.valor) deve estar entre

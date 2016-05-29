@@ -188,44 +188,38 @@ COMMENT ON COLUMN efeito.categoria_efeito.id_categoria IS 'Referência para chav
 COMMENT ON COLUMN efeito.categoria_efeito.id_efeito IS 'Referência para chave primária de efeito';
 
 ------------------------------------------
--- Plug
+-- Plugs
 ------------------------------------------
-CREATE TABLE efeito.plug (
-	id_plug int,
-	id_tipo_plug int,
-
+CREATE TABLE efeito.plug_entrada (
+	id_plug_entrada int PRIMARY KEY,
 	id_efeito int NOT NULL,
-	nome varchar(50) NOT NULL,
-
-	PRIMARY KEY (id_plug, id_tipo_plug)
+	nome varchar(50) NOT NULL
 );
 
-COMMENT ON TABLE efeito.plug IS 'Um plug é a porta de entrada ou de saída do áudio.
-Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. 
-Indo além que pedais de efeitos no mundo real, onde um plug de saída pode conectar somente com um plug de entrada, é possível que um plug de saída conecte-se com mais de um plug de entrada e vice-versa, facilitando um processamento de áudio "paralelo".
+COMMENT ON TABLE efeito.plug_entrada IS 'Um plug é a porta de entrada ou de saída do áudio. Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. 
+Um plug de entrada permite que um sinal que chega seja processado pelo efeito. Um simples exemplo é: Saída da guitarra **entra** na caixa de som.
 
- - Para saber o tipo de plug, visite efeito.tipo_plug;
  - Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
 
-COMMENT ON COLUMN efeito.plug.id_plug IS 'Chave primária de plug';
-COMMENT ON COLUMN efeito.plug.id_efeito IS 'Referência para chave primária de efeito';
-COMMENT ON COLUMN efeito.plug.id_tipo_plug IS 'Referência para chave primária de tipo_plug';
-COMMENT ON COLUMN efeito.plug.nome IS 'Nome do plug';
+COMMENT ON COLUMN efeito.plug_entrada.id_plug_entrada IS 'Chave primária de plug_entrada';
+COMMENT ON COLUMN efeito.plug_entrada.id_efeito IS 'Referência para chave primária de efeito';
+COMMENT ON COLUMN efeito.plug_entrada.nome IS 'Nome do plug';
 
-CREATE TABLE efeito.tipo_plug (
-	id_tipo_plug int PRIMARY KEY,
-	nome varchar(50) NOT NULL UNIQUE
+CREATE TABLE efeito.plug_saida (
+	id_plug_saida int PRIMARY KEY,
+	id_efeito int NOT NULL,
+	nome varchar(50) NOT NULL
 );
 
-COMMENT ON TABLE efeito.tipo_plug IS 'Para este minimundo, um plug pode ser de entrada ou de saída
+COMMENT ON TABLE efeito.plug_saida IS 'Um plug é a porta de entrada ou de saída do áudio. Seu uso possibilita o processamento em série de vários efeitos - assim como uma cadeia de pedais de guitarra. 
+Um plug de saída permite o uso por outro efeito de um sinal processado do efeito com o plug de saída utilizado. Um simples exemplo é: **Saída** da guitarra entra na caixa de som.
 
-Para não ter que separar os tipos distintos de plugs em mais de uma tabela, fora utilizada esta estratégia.
-Claramente, existem restrições de uso de plugs conforme seu tipo (como em instancia.conexao). Para estes casos, foram utilizadas Triggers para garantir um estado válido para o Banco de dados (conforme as decisões de abstração tormadas).
+ - Para saber como conectar efeitos (ou seja, vincular o processamento realizado pelos efeitos através dos plugs), visite instancia.conexao';
 
-Naturalmente, podem haver outros tipos de plugs. Entretanto, para o estado das tecnologias (efeito.tecnologia), estes dois são o suficiente.';
+COMMENT ON COLUMN efeito.plug_saida.id_plug_saida IS 'Chave primária de plug_saida';
+COMMENT ON COLUMN efeito.plug_saida.id_efeito IS 'Referência para chave primária de efeito';
+COMMENT ON COLUMN efeito.plug_saida.nome IS 'Nome do plug';
 
-COMMENT ON COLUMN efeito.tipo_plug.id_tipo_plug IS 'Chave primária de tipo_plug';
-COMMENT ON COLUMN efeito.tipo_plug.nome IS 'Nome do tipo do plug';
 ------------------------------------------
 -- Parametro
 ------------------------------------------
@@ -272,26 +266,51 @@ ALTER TABLE efeito.efeito ADD FOREIGN KEY (id_tecnologia) REFERENCES efeito.tecn
 ALTER TABLE efeito.categoria_efeito ADD FOREIGN KEY (id_categoria) REFERENCES efeito.categoria (id_categoria);
 ALTER TABLE efeito.categoria_efeito ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeito (id_efeito);
 
-ALTER TABLE efeito.plug ADD FOREIGN KEY (id_tipo_plug) REFERENCES efeito.tipo_plug (id_tipo_plug);
-ALTER TABLE efeito.plug ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeito (id_efeito);
+ALTER TABLE efeito.plug_entrada ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeito (id_efeito);
+ALTER TABLE efeito.plug_saida ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeito (id_efeito);
 
 ALTER TABLE efeito.parametro ADD FOREIGN KEY (id_efeito) REFERENCES efeito.efeito (id_efeito);
 
 ------------------------------------------
 -- Popular dados BASE
 ------------------------------------------
+-- Dados referentes ao Hardware 
+
+INSERT INTO efeito.tecnologia (id_tecnologia, nome, descricao)
+     VALUES (1, 'PedalPi', 'Tecnologia utilizada nas configurações referentes ao hardware do PedalPi');
+
+INSERT INTO efeito.categoria (id_categoria, nome) 
+     VALUES (1, 'System INPUT'),
+            (2, 'System OUTPUT');
+
+ INSERT INTO efeito.empresa (id_empresa, nome, site)
+      VALUES (1, 'PedalController', 'http://PedalController.github.io/');
+
+ INSERT INTO efeito.efeito (id_efeito, id_empresa, id_tecnologia, nome, descricao, identificador) 
+      VALUES (1, 1, 1, 'Placa de áudio - ENTRADA', 'O sinal de instrumentos ligados ao equipamento será acessível por meio desse efeito', 'http://SrMouraSilva.github.io/Instrumentos'),
+	     (2, 1, 1, 'Placa de áudio - SAÍDA', 'Saída de efeitos ligados aqui serão enviados para as saidas do equipamento, que serão utilizadas possivelmente em caixas de som', 'http://SrMouraSilva.github.io/Caixas');
+
+ INSERT INTO efeito.categoria_efeito (id_categoria, id_efeito) 
+      VALUES (1, 1),
+	     (2, 2);
+
+-- Saída dos efeitos do patch para as entrada das "caixas de som"
+ INSERT INTO efeito.plug_entrada (id_plug_entrada, id_efeito, nome) 
+      VALUES (1, 1, 'Esquerda'),
+	     (2, 1, 'Direita'),
+	     (3, 1, 'Monitor');
+
+-- Saída dos "instrumentos" para os efeitos do patch
+ INSERT INTO efeito.plug_saida (id_plug_saida, id_efeito, nome) 
+      VALUES (1, 2, 'Esquerda'),
+	     (2, 2, 'Direita');
+
 -- Tecnologia e empresa do dispositivo
 INSERT INTO efeito.tecnologia (id_tecnologia, nome, descricao)
-VALUES (1, 'LV²', 'LV2 is an open standard for audio plugins, used by hundreds of plugins and other projects. At its core, LV2 is a simple stable interface, accompanied by extensions which add functionality to support the needs of increasingly powerful audio software'),
-       (2, 'LADSPA', 'LADSPA is an acronym for Linux Audio Developer"s Simple Plugin Aefeito. It is an application programming interface (Aefeito) standard for handling audio filters and audio signal processing effects, licensed under the GNU Lesser General Public License (LGPL)'),
-       (3, 'VST', 'Virtual Studio Technology (VST) is a software interface that integrates software audio synthesizer and effect plugins with audio editors and recording systems. VST and similar technologies use digital signal processing to simulate traditional recording studio hardware in software. Thousands of plugins exist, both commercial and freeware, and a large number of audio applications support VST under license from its creator, Steinberg.');
-
--- Categorias de efeitos
-
--- Tipos de Plug
-INSERT INTO efeito.tipo_plug (id_tipo_plug, nome)
-VALUES (1, 'Input'),
-       (2, 'Output');
+VALUES (2, 'LV²', 'LV2 is an open standard for audio plugins, used by hundreds of plugins and other projects. At its core, LV2 is a simple stable interface, accompanied by extensions which add functionality to support the needs of increasingly powerful audio software'),
+       (3, 'LADSPA', 'LADSPA is an acronym for Linux Audio Developer"s Simple Plugin Aefeito. It is an application programming interface (Aefeito) standard for handling audio filters and audio signal processing effects, licensed under the GNU Lesser General Public License (LGPL)'),
+       (4, 'VST', 'Virtual Studio Technology (VST) is a software interface that integrates software audio synthesizer and effect plugins with audio editors and recording systems. VST and similar technologies use digital signal processing to simulate traditional recording studio hardware in software. Thousands of plugins exist, both commercial and freeware, and a large number of audio applications support VST under license from its creator, Steinberg.'),
+       (5, 'AU', 'Audio Units (AU) are a system-level plug-in architecture provided by Core Audio in the operating system OS X, iOS developed by Apple. Audio Units are a set of application programming interface (API) services provided by the operating system to generate, process, receive, or otherwise manipulate streams of audio in near-real-time with minimal latency.');
 
 -------------------------------------------------------------------------------------
 -- Esquema instancia
@@ -304,11 +323,9 @@ CREATE TABLE instancia.conexao (
 
 	id_instancia_efeito_saida int NOT NULL,
 	id_plug_saida int NOT NULL,
-	id_tipo_plug_saida int NOT NULL CHECK (id_tipo_plug_saida = 1),
 
 	id_instancia_efeito_entrada int NOT NULL,
 	id_plug_entrada int NOT NULL,
-	id_tipo_plug_entrada int NOT NULL CHECK (id_tipo_plug_entrada = 2),
 	
 	UNIQUE (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
 );
@@ -319,9 +336,9 @@ Pode-se também interpretar instancia.patch como um grafo, onde as portas (insta
 
 COMMENT ON COLUMN instancia.conexao.id_conexao IS 'Chave primária de conexao';
 COMMENT ON COLUMN instancia.conexao.id_instancia_efeito_saida IS 'Referência para chave primária de instancia_efeito. Instância de efeito cuja seu efeito possua o plug de saída (id_plug_saida)';
-COMMENT ON COLUMN instancia.conexao.id_plug_saida IS 'Referência para chave primária de plug. Plug deve ser do tipo_plug 2:saída. Representa o plug de origem, onde o qual a conexão entre as instancia_efeitos parte. Pode ser entendido como Vértice de origem de uma Aresta do grafo "Conexões de um Patch"';
+COMMENT ON COLUMN instancia.conexao.id_plug_saida IS 'Referência para chave primária de plug_saida. Representa o plug de origem, onde o qual a conexão entre as instancia_efeitos parte. Pode ser entendido como Vértice de origem de uma Aresta do grafo "Conexões de um Patch"';
 COMMENT ON COLUMN instancia.conexao.id_instancia_efeito_entrada IS 'Menor valor possível no qual este parâmetro pode assumir. Instância de efeito cuja seu efeito possua o plug de entrada (id_plug_entrada)';
-COMMENT ON COLUMN instancia.conexao.id_plug_entrada IS 'Referência para chave primária de plug. Plug deve ser do tipo_plug 1:entrada. Representa o plug de destino, onde o qual a conexão entre as instancia_efeitos destina-se. Pode ser entendido como Vértice de destino de uma Aresta do grafo "Conexões de um Patch"';
+COMMENT ON COLUMN instancia.conexao.id_plug_entrada IS 'Referência para chave primária de plug_entrada. Representa o plug de destino, onde o qual a conexão entre as instancia_efeitos destina-se. Pode ser entendido como Vértice de destino de uma Aresta do grafo "Conexões de um Patch"';
 
 ------------------------------------------
 -- Instância, Patchs e Bancos
@@ -400,8 +417,8 @@ COMMENT ON COLUMN instancia.configuracao_efeito_parametro.valor IS 'Valor do par
 ------------------------------------------
 -- Relacionamentos de chave estrangeira
 ------------------------------------------
-ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_saida, id_tipo_plug_saida) REFERENCES efeito.plug (id_plug, id_tipo_plug);
-ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_entrada, id_tipo_plug_entrada) REFERENCES efeito.plug (id_plug, id_tipo_plug);
+ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_saida)   REFERENCES efeito.plug_saida (id_plug_saida);
+ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_plug_entrada) REFERENCES efeito.plug_entrada (id_plug_entrada);
 
 ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_instancia_efeito_entrada) REFERENCES instancia.instancia_efeito (id_instancia_efeito);
 ALTER TABLE instancia.conexao ADD FOREIGN KEY (id_instancia_efeito_saida) REFERENCES instancia.instancia_efeito (id_instancia_efeito);
@@ -457,12 +474,16 @@ CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger 
 		SELECT *
 		  FROM instancia.instancia_efeito
 		  JOIN efeito.efeito USING (id_efeito)
-		  JOIN efeito.plug USING (id_efeito)
+		  JOIN efeito.plug_saida USING (id_efeito)
 
 		 WHERE id_instancia_efeito = NEW.id_instancia_efeito_saida
-		   AND id_plug = NEW.id_plug_saida
+		   AND id_plug_saida = NEW.id_plug_saida
 	) THEN
-		RAISE EXCEPTION 'Plug de saída (id_plug_saida) % não pertence ao efeito no qual sua instância (instancia_efeito_saida) % pertence', NEW.id_plug_saida, NEW.id_instancia_efeito_saida;
+		RAISE EXCEPTION 'Plug de saída % - % não pertence ao efeito de id % no qual sua instância % pertence (instancia_efeito_saída)',
+				NEW.id_plug_saida,
+				nome FROM efeito.plug_saida WHERE id_plug_saida = NEW.id_plug_saida,
+				id_efeito FROM instancia.instancia_efeito WHERE id_instancia_efeito = NEW.id_instancia_efeito_saida,
+				NEW.id_instancia_efeito_saida;
 	END IF;
 
 	-- Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se
@@ -470,12 +491,17 @@ CREATE OR REPLACE FUNCTION instancia.funcao_gerenciar_conexao() RETURNS trigger 
 		SELECT *
 		  FROM instancia.instancia_efeito
 		  JOIN efeito.efeito USING (id_efeito)
-		  JOIN efeito.plug USING (id_efeito)
+		  JOIN efeito.plug_entrada USING (id_efeito)
 
 		 WHERE id_instancia_efeito = NEW.id_instancia_efeito_entrada
-		   AND id_plug = NEW.id_plug_entrada
+		   AND id_plug_entrada = NEW.id_plug_entrada
 	) THEN
-		RAISE EXCEPTION 'Plug de entrada (id_plug_entrada) % não pertence ao efeito no qual sua instância (instancia_efeito_entrada) % pertence', NEW.id_plug_saida, NEW.id_instancia_efeito_saida;
+		RAISE EXCEPTION 'Plug de entrada % - % não pertence ao efeito de id % no qual sua instância % pertence (instancia_efeito_entrada)',
+				NEW.id_plug_entrada,
+				nome FROM efeito.plug_entrada WHERE id_plug_entrada = NEW.id_plug_entrada,
+				id_efeito FROM instancia.instancia_efeito WHERE id_instancia_efeito = NEW.id_instancia_efeito_entrada,
+				NEW.id_instancia_efeito_entrada;
+				
 	END IF;
 
         RETURN NEW;
@@ -491,6 +517,7 @@ COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger qu
 
  - Plug de SAÍDA deve pertencer ao efeito no qual a instancia refere-se;
  - Plug de ENTRADA deve pertencer ao efeito no qual a instancia refere-se.';
+
 
 -- Testes
 --  1. Plug saída não pertencente ao efeito de saída
@@ -640,6 +667,7 @@ UPDATE instancia.configuracao_efeito_parametro
  SET valor = 5000
   WHERE id_configuracao_efeito_parametro = 1;
 */
+
 
 ------------------------------------------
 -- Dados de exemplo

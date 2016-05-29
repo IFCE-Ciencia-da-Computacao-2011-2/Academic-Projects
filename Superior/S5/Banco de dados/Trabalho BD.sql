@@ -286,8 +286,8 @@ INSERT INTO efeito.categoria (nome)
       VALUES ('PedalController', 'http://PedalController.github.io/');
 
  INSERT INTO efeito.efeito (id_empresa, id_tecnologia, nome, descricao, identificador) 
-      VALUES (1, 1, 'Placa de áudio - ENTRADA', 'O sinal de instrumentos ligados ao equipamento será acessível por meio desse efeito', 'http://SrMouraSilva.github.io/Instrumentos'),
-	     (1, 1, 'Placa de áudio - SAÍDA', 'Saída de efeitos ligados aqui serão enviados para as saidas do equipamento, que serão utilizadas possivelmente em caixas de som', 'http://SrMouraSilva.github.io/Caixas');
+      VALUES (1, 1, 'Placa de áudio - ENTRADA', 'O sinal de instrumentos ligados ao equipamento será acessível por meio desse efeito', 'http://SrMouraSilva.github.io/Placa-de-audio-ENTRADA'),
+	     (1, 1, 'Placa de áudio - SAÍDA', 'Saída de efeitos ligados aqui serão enviados para as saidas do equipamento, que serão utilizadas possivelmente em caixas de som', 'http://SrMouraSilva.github.io/Placa-de-audio-SAIDA');
 
  INSERT INTO efeito.categoria_efeito (id_categoria, id_efeito) 
       VALUES (1, 1),
@@ -678,7 +678,7 @@ UPDATE instancia.configuracao_efeito_parametro
 ------------------------------------------
 -- View 1 - Efeitos
 SELECT * FROM efeito.view_efeito_descricao
- ORDER BY empresa;
+ ORDER BY empresa, nome;
 
 -- View 2 - Patchs
 SELECT * FROM instancia.view_patch_detalhes;

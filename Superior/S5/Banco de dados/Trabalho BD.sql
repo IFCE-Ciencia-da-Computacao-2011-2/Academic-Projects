@@ -1,4 +1,6 @@
-﻿DROP SCHEMA IF EXISTS efeito CASCADE;
+﻿COMMENT ON DATABASE "PedalPi" IS 'Banco de persistência do multi-efeitos PedalPi';
+
+DROP SCHEMA IF EXISTS efeito CASCADE;
 CREATE SCHEMA efeito;
 
 COMMENT ON SCHEMA efeito IS 'Schema responsável por agrupar elementos referentes a efeito: Definições de efeitos, tecnologias de efeitos, empresas que fizeram efeitos, parâmetros de efeitos, tipos (categorias) de efeitos...';
@@ -13,16 +15,43 @@ CREATE SCHEMA dicionario_dados;
 
 COMMENT ON SCHEMA dicionario_dados IS 'Schema responsável por abstrair o catálogo do banco, expondo em views simplificadas dados relevantes para a geração de um dicionário de dados';
 
+COMMENT ON SCHEMA public IS 'Schema não utilizado em PedalPi';
+
+
 -------------------------------------------------------------------------------------
 -- Esquema dicionario_dados
 -------------------------------------------------------------------------------------
 -- Material de apoio sobre catálogo do Postgres: http://www.inf.puc-rio.br/~postgresql/conteudo/publicationsfiles/monteiro-reltec-metadados.PDF
+DROP VIEW IF EXISTS dicionario_dados.database;
+
+CREATE OR REPLACE VIEW dicionario_dados.database AS
+
+SELECT datname AS nome, description as comentario
+  FROM pg_shdescription
+JOIN pg_database on objoid = pg_database.oid
+WHERE datistemplate = false
+  AND datname !~ 'postgres';
+
+COMMENT ON VIEW dicionario_dados.database IS 'Bancos de dados persistidos neste postgres';
+
+  
+DROP VIEW IF EXISTS dicionario_dados.schema;
+CREATE OR REPLACE VIEW dicionario_dados.schema AS
+SELECT n.nspname AS nome, pg_catalog.pg_get_userbyid(n.nspowner) AS "usuário",
+       pg_catalog.array_to_string(n.nspacl, E'\n') AS privilegios,
+       pg_catalog.obj_description(n.oid, 'pg_namespace') AS comentario
+
+ FROM pg_catalog.pg_namespace n
+ WHERE n.nspname !~ '^pg_' AND n.nspname <> 'information_schema'
+ ORDER BY nome;
+
+COMMENT ON VIEW dicionario_dados.schema IS 'Dispõe metadados importante de schemas';
 
 -- http://dba.stackexchange.com/questions/30061/how-do-i-list-all-tables-in-all-schemas-owned-by-the-current-user-in-postgresql
 DROP view IF EXISTS dicionario_dados.relacao;
 CREATE OR REPLACE VIEW dicionario_dados.relacao AS
-	SELECT pg_namespace.nspname AS namespace,
-	       RelName as tabela,
+	SELECT pg_namespace.nspname AS "schema",
+	       RelName as relacao,
 	       pg_catalog.obj_description(pg_class.oid, 'pg_class') AS comentario,
 	       
 	       case pg_class.relkind
@@ -38,9 +67,9 @@ CREATE OR REPLACE VIEW dicionario_dados.relacao AS
 	 JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 
 	 WHERE pg_class.relkind NOT IN ('i', 'S')
-	   AND pg_namespace.nspname IN ('efeito', 'instancia', 'dicionario_dados')
+	   AND pg_namespace.nspname IN (SELECT nome FROM dicionario_dados.schema)
 
-	   ORDER BY namespace, tipo;
+	   ORDER BY "schema", tipo, relacao;
 
 COMMENT ON VIEW dicionario_dados.relacao IS 'Dispõe metadados importante de relações, sejam estas tabelas ou views';
 
@@ -49,7 +78,7 @@ DROP view IF EXISTS dicionario_dados.atributo;
 CREATE OR REPLACE VIEW dicionario_dados.atributo AS
 
 -- http://blog.delogic.com.br/criar-dicionario-de-dados-em-postgres/
-SELECT nsp.nspname AS Namespace,
+SELECT nsp.nspname AS "schema",
        tbl.relname AS Tabela,
        atr.attname AS Coluna,
        pg_catalog.format_type(atr.atttypid,atr.atttypmod) AS Tipo,
@@ -91,9 +120,9 @@ SELECT nsp.nspname AS Namespace,
   LEFT JOIN pg_attrdef atrdef ON atrdef.adrelid = tbl.oid AND atrdef.adnum = atr.attnum
   LEFT JOIN pg_namespace nsp ON nsp.oid = tbl.relnamespace
  WHERE tbl.relkind = 'r'::char
-   AND nsp.nspname IN ('efeito', 'instancia', 'dicionario_dados')
+   AND nsp.nspname IN (SELECT nome FROM dicionario_dados.schema)
    AND atr.attnum > 0
- order by namespace, Tabela, atr.attnum /* Número da coluna*/, Coluna, Chave_Primaria desc, Chave_Estrangeira desc;
+ order by "schema", Tabela, atr.attnum /* Número da coluna*/, Coluna, Chave_Primaria desc, Chave_Estrangeira desc;
 
 
 COMMENT ON VIEW dicionario_dados.atributo IS 'Dispõe metadados importante de atributos';
@@ -700,5 +729,7 @@ SELECT view_efeito_descricao.id_efeito, view_efeito_descricao.nome, view_efeito_
 
  WHERE id_efeito = 100;
 
+SELECT * FROM dicionario_dados.database;
 SELECT * FROM dicionario_dados.atributo;
+SELECT * FROM dicionario_dados.schema;
 SELECT * FROM dicionario_dados.relacao;

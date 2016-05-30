@@ -595,7 +595,7 @@ INSERT INTO instancia.conexao (id_instancia_efeito_saida, id_plug_saida, id_inst
 
 UPDATE instancia.conexao
    SET id_instancia_efeito_saida=1, id_plug_saida=1, id_instancia_efeito_entrada=12, id_plug_entrada=126   
- WHERE id_conexao=1 
+ WHERE id_conexao=1
 
 --  2. Plug saída não pertencente ao efeito de saída
 INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
@@ -669,12 +669,27 @@ Seguem exemplos. A, B, C e D são exemplos de instancia.instancia_efeito:
 -- 1. Não devem haver ciclos
 -- START -> A -> B -> C -> END
 -- START -> A -> B -> D -> A -- CICLO!
---INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
---     VALUES (10000, 1, 3, 2,  1),
---            (10001, 2, 3, 3,  5),
---            (10002, 3, 6, 4, 64),
---            (10003, 3, 6, 1,  1); -- Loop
+/*
+INSERT INTO instancia.banco (nome)
+     VALUES ('Marllones Stronda');
 
+INSERT INTO instancia.patch (id_patch, id_banco, nome)
+     VALUES (10000, 3, 'Testosterona demais');
+
+INSERT INTO instancia.instancia_efeito (id_instancia_efeito, id_efeito, id_patch)
+     VALUES (10001,    2,  10000), -- Placa de áudio - SAIDA dos instrumentos
+            (10002,    5,  10000), -- Zamtube
+            (10003,   50,  10000), -- Tap Vibrato
+            (10004,  192,  10000), -- Invada Compressor (stereo)
+            (10005,    1,  10000); -- Placa de áudio - ENTRADA dos amplificadores
+
+INSERT INTO instancia.conexao (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
+     VALUES (10001,  1,  10002,   7), -- "Placa de áudio - SAÍDA dos instrumentos - Canal Esquerdo" -> "ZamTube - Audio Input 1"
+            (10002,  6,  10003,  33), -- "ZamTube - Audio Output 1" -> "TAP Vibrato - Input"
+	    (10003, 33,  10004, 260), -- "TAP Vibrato - Output" -> "Invada Compressor (stereo) - In L"
+	    (10004, 291, 10005,   2), -- "Invada Compressor (stereo) - Out L" -> "Placa de áudio - ENTRADA dos amplificadores - Canal Direito"
+	    (10004, 291, 10003,  33); -- "Invada Compressor (stereo) - Out L" -> "TAP Vibrato - Input" -- CICLO!
+*/
 
 -- Triggers para instancia.instancia_efeito
 CREATE OR REPLACE FUNCTION instancia.funcao_gerar_configuracao_efeito_parametro() RETURNS trigger AS $$

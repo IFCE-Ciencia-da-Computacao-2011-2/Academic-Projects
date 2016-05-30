@@ -219,7 +219,7 @@ class Triggers:
 
         return resultado
 
-conexao = psycopg2.connect("host=localhost dbname=PedalPi port=5432 user=postgres password=")
+conexao = psycopg2.connect("host=localhost dbname=PedalPi port=5432 user=postgres password=postgres")
 cursor = conexao.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 print(Dicionario(cursor).format())

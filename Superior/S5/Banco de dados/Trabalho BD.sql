@@ -148,10 +148,10 @@ COMMENT ON VIEW dicionario_dados.trigger IS 'Dispõe metadados importante de tri
 ------------------------------------------
 -- Domínios
 ------------------------------------------
-DROP DOMAIN IF EXISTS efeito.Site CASCADE;
-CREATE DOMAIN efeito.Site varchar(200);
+DROP DOMAIN IF EXISTS efeito.URI CASCADE;
+CREATE DOMAIN efeito.URI varchar(200);
 
-COMMENT ON DOMAIN efeito.Site IS 'Endereço eletrônico';
+COMMENT ON DOMAIN efeito.URI IS 'Uniform Resource Identifier - Identificador Uniforme de Recurso';
 
 ------------------------------------------
 -- Efeito
@@ -160,7 +160,7 @@ CREATE TABLE efeito.efeito (
 	id_efeito serial PRIMARY KEY,
 	nome varchar(100) NOT NULL,
 	descricao text,
-	identificador efeito.Site UNIQUE NOT NULL,
+	identificador efeito.URI UNIQUE NOT NULL,
 	id_empresa int NOT NULL,
 	id_tecnologia int NOT NULL
 );
@@ -174,7 +174,7 @@ O produto (áudio processado) poderá ser utilizado externamente (sendo disposto
 COMMENT ON COLUMN efeito.efeito.id_efeito IS 'Chave primária de efeito';
 COMMENT ON COLUMN efeito.efeito.nome IS 'Nome do efeito';
 COMMENT ON COLUMN efeito.efeito.descricao IS 'Descrição do efeito provindas da empresa que o desenvolveu';
-COMMENT ON COLUMN efeito.efeito.identificador IS 'Identificador único em forma de URI - Identificador Uniforme de Recurso';
+COMMENT ON COLUMN efeito.efeito.identificador IS 'Identificador único em forma de URI';
 COMMENT ON COLUMN efeito.efeito.id_empresa IS 'Referência para chave primária da empresa que desenvolveu o efeito';
 COMMENT ON COLUMN efeito.efeito.id_tecnologia IS 'Referência para chave primária da tecnologia utilizada do efeito';
 
@@ -184,7 +184,7 @@ COMMENT ON COLUMN efeito.efeito.id_tecnologia IS 'Referência para chave primár
 CREATE TABLE efeito.empresa (
 	id_empresa serial PRIMARY KEY,
 	nome varchar(50) NOT NULL,
-	site efeito.Site NOT NULL
+	site efeito.URI NOT NULL
 );
 
 COMMENT ON TABLE efeito.empresa IS 'Empresa que produz efeitos. Pode ser interpretada também como Fornecedor ou Desenvolvedor';
@@ -592,6 +592,10 @@ COMMENT ON TRIGGER trigger_gerenciar_conexao ON instancia.conexao IS 'Trigger qu
 --  1. Em uma conexão, somente instâncias do mesmo patch podem ser conectadas entre si; 
 INSERT INTO instancia.conexao (id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)
      VALUES (1,  1,  12, 226); -- "Aqui, ao tentarmos inserir uma conexão entre patches diferentes, o erro é lançado"
+
+UPDATE instancia.conexao
+   SET id_instancia_efeito_saida=1, id_plug_saida=1, id_instancia_efeito_entrada=12, id_plug_entrada=126   
+ WHERE id_conexao=1 
 
 --  2. Plug saída não pertencente ao efeito de saída
 INSERT INTO instancia.conexao (id_conexao, id_instancia_efeito_saida, id_plug_saida, id_instancia_efeito_entrada, id_plug_entrada)

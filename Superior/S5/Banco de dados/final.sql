@@ -864,7 +864,8 @@ SELECT * FROM dicionario_dados.atributo;
 SELECT * FROM dicionario_dados.schema;
 SELECT * FROM dicionario_dados.trigger;
 SELECT * FROM dicionario_dados.relacao;
-﻿ INSERT INTO efeito.empresa (nome, site) 
+
+INSERT INTO efeito.empresa (nome, site) 
       VALUES 
              ('ZamAudio', 'http://www.zamaudio.com'),
              ('x42', 'http://gareus.org/'),
@@ -7780,7 +7781,7 @@ source: http://quitte.de/dsp/caps.html#AmpVTS
            (424, 'Audio Output 2');
 
 
-﻿INSERT INTO instancia.banco (nome)
+INSERT INTO instancia.banco (nome)
      VALUES ('Shows'),
             ('Experience');
 

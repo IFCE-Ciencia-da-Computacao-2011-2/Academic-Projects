@@ -33,7 +33,7 @@ public class ClienteUDP {
 	}
 
 	private void request(DatagramSocket cliente, int minimo, int maximo) throws IOException {
-		String dados = minimo + " " + maximo;
+		String dados = minimo + " " + maximo + " ";
 
 		byte[] bytes = dados.getBytes();
 

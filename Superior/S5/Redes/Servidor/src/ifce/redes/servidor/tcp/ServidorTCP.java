@@ -16,13 +16,13 @@ import ifce.redes.protocolo.Mensagem;
 import ifce.redes.protocolo.MensagemBuilder;
 import ifce.redes.protocolo.Protocolo;
 
-public class ServidorTCP2 implements CompletionHandler<AsynchronousSocketChannel, Void> {
+public class ServidorTCP implements CompletionHandler<AsynchronousSocketChannel, Void> {
 
 	private static final int PORTA = 12345;
 	private final AsynchronousServerSocketChannel servidor;
 	private Map<InetSocketAddress, Partida> partidas;
 
-	public ServidorTCP2() throws IOException {
+	public ServidorTCP() throws IOException {
 		this.partidas = new ConcurrentHashMap<>();
 		this.servidor = AsynchronousServerSocketChannel.open().bind(new InetSocketAddress(PORTA));
 
@@ -70,24 +70,23 @@ public class ServidorTCP2 implements CompletionHandler<AsynchronousSocketChannel
 		ByteBuffer byteBuffer = ByteBuffer.allocate(4096);
 
 		while (true) {
-			int bytesRead = canal.read(byteBuffer).get(1, TimeUnit.DAYS);
-
-			System.out.println( "bytes read: " + bytesRead );
-
-			boolean linhaVazia = byteBuffer.position() <= 2;
-			if (linhaVazia)
+			int tamanho = canal.read(byteBuffer).get(1, TimeUnit.DAYS);
+			if (tamanho == -1)
 				break;
 
 			// Make the buffer ready to read
 			byteBuffer.flip();
 
 			// Convert the buffer into a line
-			byte[] linha = new byte[bytesRead];
-			byteBuffer.get(linha, 0, bytesRead);
+			byte[] linha = new byte[tamanho];
+			byteBuffer.get(linha, 0, tamanho);
 
 			Mensagem mensagemRecebida = MensagemBuilder.gerar(new String(linha));
 			Protocolo protocolo = new Protocolo(partida);
 			Mensagem mensagemAEnviar = protocolo.protocolar(mensagemRecebida);
+			
+			System.out.println("RECEBIDO: " + mensagemRecebida);
+			System.out.println("ENVIADO: " + mensagemAEnviar);
 
 			canal.write(ByteBuffer.wrap(mensagemAEnviar.toString().getBytes()));
 

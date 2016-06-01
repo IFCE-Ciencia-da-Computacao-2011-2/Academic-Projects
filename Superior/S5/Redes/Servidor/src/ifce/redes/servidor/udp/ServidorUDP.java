@@ -20,7 +20,6 @@ public class ServidorUDP {
 
 			int numero = 0;
 			String dados = new String(pduRecebida.getData());
-			System.out.println(dados);
 			String[] valores = dados.split(" ");
 
 			if (valores.length >= 2) {

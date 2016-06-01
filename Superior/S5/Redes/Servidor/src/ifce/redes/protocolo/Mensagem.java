@@ -19,7 +19,7 @@ public class Mensagem {
 
 		mensagem.append(tipo);
 
-		if (tipo != null) {
+		if (valor != null) {
 			mensagem.append(" ");
 			mensagem.append(valor);
 		}

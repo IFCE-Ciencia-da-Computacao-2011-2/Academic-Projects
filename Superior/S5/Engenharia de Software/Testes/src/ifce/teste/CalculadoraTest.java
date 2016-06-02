@@ -88,5 +88,10 @@ public class CalculadoraTest {
 		assertTrue(calculadora.dividir(-13, 7) < 0);
 		assertTrue(calculadora.dividir(13, -7) < 0);
 	}
+	
+	@Test(expected=ArithmeticException.class)
+	public void dividirPorZeroTest() {
+		calculadora.dividir(13, 0);
+	}
 }
 
